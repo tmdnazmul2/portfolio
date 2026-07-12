@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>ICMAB CMA FR222 IFA Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background:#020617; color:#e2e8f0; font-family:'DM Sans',system-ui,sans-serif; }
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:#0f172a; }
+  ::-webkit-scrollbar-thumb { background:#334155; border-radius:3px; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none; } }
+  @keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+  .fade { animation: fadeIn .4s ease; }
+  .bar-track { background:#1e293b; border-radius:6px; height:10px; overflow:hidden; flex:1; }
+  .bar-fill { height:100%; border-radius:6px; width:0%; transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .badge { border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; white-space:nowrap; display:inline-block; }
+  .badge.small { padding:2px 8px; font-size:10px; }
+  .statcard { background:linear-gradient(135deg,#1e293b,#0f172a); border-radius:16px; padding:20px 24px; text-align:center; }
+  .statcard .val { font-size:36px; font-weight:800; font-family:'Playfair Display',serif; line-height:1; }
+  .statcard .lbl { font-size:13px; font-weight:600; color:#94a3b8; margin-top:6px; text-transform:uppercase; letter-spacing:1px; }
+  .statcard .sub { font-size:11px; color:#475569; margin-top:3px; }
+  .topiccard { border-radius:14px; padding:14px 16px; cursor:pointer; transition: all .2s; border:1.5px solid #334155; background:#1e293b; }
+  .navbtn { padding:12px 16px; font-size:12px; font-weight:600; border:none; background:none; cursor:pointer; color:#475569; border-bottom:2px solid transparent; white-space:nowrap; transition: all .2s; display:flex; align-items:center; gap:5px; }
+  .navbtn.active { color:#818cf8; border-bottom:2px solid #818cf8; }
+  a, button { font-family:inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const DATA = {
+  exams: [
+    { id: "J22", label: "Jan 2022", year: 2022, format: "old" },
+    { id: "M22", label: "May 2022", year: 2022, format: "old" },
+    { id: "S22", label: "Sep 2022", year: 2022, format: "old" },
+    { id: "J23", label: "Jan 2023", year: 2023, format: "old" },
+    { id: "M23", label: "May 2023", year: 2023, format: "old" },
+    { id: "S23", label: "Sep 2023", year: 2023, format: "old" },
+    { id: "J24", label: "Jan 2024", year: 2024, format: "old" },
+    { id: "M24", label: "May 2024", year: 2024, format: "old" },
+    { id: "S24", label: "Sep 2024", year: 2024, format: "old" },
+    { id: "J25", label: "Jan 2025", year: 2025, format: "new" },
+    { id: "M25", label: "May 2025", year: 2025, format: "new" },
+    { id: "S25", label: "Sep 2025", year: 2025, format: "new" },
+    { id: "J26", label: "Jan 2026", year: 2026, format: "new" },
+  ],
+  topics: [
+    { id: "cf", label: "Conceptual Framework", std: "IASB CF / IFAC", color: "#7C3AED",
+      appearances: [1,0,1,1,0,1,1,1,1,1,1,1,1], marks: [4,0,4,4,0,4,7,4,4,7,6,20,10],
+      tier: 1, difficulty: "Easy", studyWeeks: "0.5 wk",
+      subtopics: ["Fair presentation","Substance over form","Qualitative characteristics","IFAC ethics","Recognition criteria"],
+      qPattern: "Essay — critique scenarios using CF concepts",
+      keyFact: "DEAR structure: Define → Explain → Apply → Recommend" },
+    { id: "cf7", label: "Cash Flow (IAS 7)", std: "IAS 7", color: "#DC2626",
+      appearances: [1,1,1,1,1,1,1,1,1,1,1,1,1], marks: [12,15,20,15,20,12,20,15,20,20,20,20,20],
+      tier: 1, difficulty: "Medium", studyWeeks: "2 wks",
+      subtopics: ["Indirect operating","Direct operating","Investing activities","Financing activities","Non-cash disclosures","Equity method adjustment"],
+      qPattern: "Full 15–20M question — comparative SFP → full CFS",
+      keyFact: "ONLY topic in 100% of all 13 documented sittings" },
+    { id: "eps", label: "EPS — IAS 33", std: "IAS 33", color: "#EA580C",
+      appearances: [1,1,1,1,1,1,1,1,1,1,1,1,1], marks: [7,8,7,8,10,8,6,8,8,10,7,5,10],
+      tier: 1, difficulty: "Hard", studyWeeks: "1.5 wks",
+      subtopics: ["Basic EPS","Weighted average shares","Bonus issue adjustment","Rights issue TERP","Diluted — convertible bonds","Diluted — preference shares","Diluted — share options"],
+      qPattern: "8–12M computation — all 3 dilutive instruments tested together",
+      keyFact: "If-converted test: include only if EPS impact < basic EPS" },
+    { id: "ppe", label: "PPE — IAS 16/36/23", std: "IAS 16, 23, 36", color: "#D97706",
+      appearances: [1,1,1,1,1,1,1,1,0,1,1,1,1], marks: [8,10,8,8,12,8,10,8,0,7,14,8,14],
+      tier: 1, difficulty: "Medium", studyWeeks: "1.5 wks",
+      subtopics: ["Cost capitalisation","Disposal gain/loss","Revaluation model","Impairment (IAS 36)","Borrowing costs (IAS 23)","De-recognition","Repair vs capitalise"],
+      qPattern: "5 transaction types → journal entries (14M)",
+      keyFact: "Revaluation deficit: first offset OCI surplus, excess to P&L" },
+    { id: "ia", label: "Intangibles — IAS 38", std: "IAS 38", color: "#65A30D",
+      appearances: [1,1,1,0,1,1,1,1,1,1,1,1,1], marks: [8,7,6,0,7,8,10,8,6,7,10,10,6],
+      tier: 1, difficulty: "Medium", studyWeeks: "1 wk",
+      subtopics: ["Research vs development","PITFAR criteria","Patent journals","Infringement litigation","Goodwill","Revaluation of intangibles","Amortisation"],
+      qPattern: "Multi-year patent journals: obtain→defend→impair→write-off",
+      keyFact: "PITFAR: Probable benefits, Intention, Technical, Financial, Ability, Reliable cost" },
+    { id: "inv", label: "Inventory — IAS 2", std: "IAS 2", color: "#0891B2",
+      appearances: [0,1,1,0,1,1,0,1,1,1,0,1,1], marks: [0,8,7,0,10,8,0,8,8,9,0,8,10],
+      tier: 1, difficulty: "Medium", studyWeeks: "1 wk",
+      subtopics: ["WIP cost calculation","NRV test item-by-item","FIFO vs weighted average","Retail inventory method","Net realisable value","Disclosure"],
+      qPattern: "WIP costing (exclude distribution) + NRV comparison",
+      keyFact: "WIP: RM + Direct Labour + Factory OH at NORMAL capacity only" },
+    { id: "tax", label: "Deferred Tax — IAS 12", std: "IAS 12", color: "#7C3AED",
+      appearances: [1,1,1,0,1,0,1,1,1,1,1,1,1], marks: [8,10,8,0,8,0,8,8,10,8,10,8,5],
+      tier: 2, difficulty: "Hard", studyWeeks: "1.5 wks",
+      subtopics: ["Tax base concept","Deductible temp diff → DTA","Taxable temp diff → DTL","Permanent differences","Rate change impact","Journal entries","Current tax calculation"],
+      qPattern: "3–4 temp differences → compute DTA/DTL → journals",
+      keyFact: "Permanent differences (fines, non-deductible items) = NO deferred tax" },
+    { id: "lse", label: "Leases — IFRS 16", std: "IFRS 16", color: "#0284C7",
+      appearances: [0,1,0,1,0,1,1,0,1,1,1,1,0], marks: [0,8,0,7,0,8,10,0,8,10,10,10,0],
+      tier: 2, difficulty: "Hard", studyWeeks: "1 wk",
+      subtopics: ["ROU asset initial recognition","Lease liability (PV)","Amortisation schedule","Advance vs arrears payments","Journal entries 2 years","SFP/P&L presentation"],
+      qPattern: "Full amortisation table + 2-year journals (10M)",
+      keyFact: "ROU Asset = PV of payments + direct costs − lessor incentives" },
+    { id: "prov", label: "Provisions — IAS 37", std: "IAS 37, IAS 10", color: "#BE185D",
+      appearances: [0,1,0,1,1,0,1,0,1,1,1,1,1], marks: [0,8,0,6,8,0,6,0,8,10,10,8,10],
+      tier: 2, difficulty: "Medium", studyWeeks: "1 wk",
+      subtopics: ["3 recognition criteria","PV discounting","Unwinding of discount","Contingent liability","Contingent asset","Onerous contracts","IAS 10 events"],
+      qPattern: "Essay on criteria + PV calculation of environmental/legal provision",
+      keyFact: "POB: Present Obligation + probable Outflow + reliable Best estimate" },
+    { id: "rev", label: "Revenue — IFRS 15", std: "IFRS 15", color: "#059669",
+      appearances: [0,1,0,0,0,1,1,1,1,0,0,1,1], marks: [0,8,0,0,0,8,8,8,8,0,0,8,5],
+      tier: 2, difficulty: "Medium", studyWeeks: "1 wk",
+      subtopics: ["5-step CIDAP model","Variable consideration","Volume discounts","Contract modifications","Performance obligations","Over time vs point in time"],
+      qPattern: "IFRS 15 applied to contract scenario + journal entry",
+      keyFact: "CIDAP: Contract → Identify POs → Determine price → Allocate → Perform" },
+    { id: "ias8", label: "IAS 8 Policies/Errors", std: "IAS 8", color: "#6366F1",
+      appearances: [1,1,0,0,1,0,1,1,1,0,0,1,1], marks: [6,7,0,0,4,0,8,6,8,0,0,5,4],
+      tier: 2, difficulty: "Medium", studyWeeks: "0.5 wk",
+      subtopics: ["Policy change → retrospective","Estimate change → prospective","Prior period error","Comparative restatement","Disclosure requirements"],
+      qPattern: "Essay: identify type of change + describe correct treatment",
+      keyFact: "Policy=RETRO | Estimate=PROSPECTIVE | Error=RESTATE" },
+    { id: "seg", label: "Segments — IFRS 8", std: "IFRS 8", color: "#0EA5E9",
+      appearances: [0,0,0,1,0,0,1,0,0,1,1,1,0], marks: [0,0,0,4,0,0,4,0,0,7,7,5,0],
+      tier: 2, difficulty: "Easy", studyWeeks: "3 days",
+      subtopics: ["10% Revenue test","10% Profit/loss test","10% Assets test","75% coverage rule","Aggregation criteria"],
+      qPattern: "Apply 3 tests to data table → identify reportable segments",
+      keyFact: "Pass ANY ONE of the 3 tests to be reportable. Then verify 75%." },
+    { id: "ifrs5", label: "Held for Sale — IFRS 5", std: "IFRS 5", color: "#F59E0B",
+      appearances: [0,0,1,1,0,1,1,1,0,1,0,1,1], marks: [0,0,6,6,0,6,6,8,0,7,0,6,6],
+      tier: 2, difficulty: "Easy", studyWeeks: "3 days",
+      subtopics: ["AHMS classification criteria","Stop depreciation","FVLCTS measurement","Impairment loss","Loss on disposal","Discontinued operations P&L"],
+      qPattern: "Calculate impairment + loss on disposal (6M)",
+      keyFact: "AHMS: Available now + Highly probable + Management committed + Suitable condition" },
+    { id: "bonds", label: "Bonds & NCL", std: "IAS 32, IAS 39", color: "#78716C",
+      appearances: [1,1,1,1,0,0,0,0,0,0,1,0,0], marks: [8,8,10,8,0,0,0,0,0,0,10,0,0],
+      tier: 3, difficulty: "Hard", studyWeeks: "1 wk",
+      subtopics: ["Bond pricing (PV tables)","EIM amortisation","Premium/discount amortisation","Early retirement","Convertible bond split","Journal entries"],
+      qPattern: "Bond price → amortisation schedule → retirement journal",
+      keyFact: "EIM: Interest expense = Opening CV × effective rate" },
+  ],
+  predictions: [
+    { topic: "Cash Flow Statement", prob: 99, marks: "15–20", basis: "100% appearance rate — never absent", color: "#DC2626" },
+    { topic: "EPS Basic + Diluted", prob: 95, marks: "8–12", basis: "17/18 sittings — all 3 instruments likely", color: "#EA580C" },
+    { topic: "PPE Journal Entries", prob: 92, marks: "10–14", basis: "5-transaction format established Jan 2026", color: "#D97706" },
+    { topic: "IFRS 16 Leases", prob: 88, marks: "8–10", basis: "Absent Jan 2026 — overdue; 3 prior sittings tested it", color: "#0284C7" },
+    { topic: "Deferred Tax IAS 12", prob: 85, marks: "5–8", basis: "5 consecutive recent sittings — trending upward", color: "#7C3AED" },
+    { topic: "IAS 37 Provisions + PV", prob: 82, marks: "8–10", basis: "5/5 last sittings — environmental/legal alternates", color: "#BE185D" },
+    { topic: "Bonds / Non-current Liab", prob: 80, marks: "8–10", basis: "Absent since Jan 2024 — 2-year gap makes it due", color: "#78716C" },
+    { topic: "Conceptual Framework Essay", prob: 78, marks: "5–8", basis: "Career ethics scenario — appeared Jan & Sep 2025, Jan 2026", color: "#7C3AED" },
+    { topic: "IAS 2 Inventory WIP+NRV", prob: 78, marks: "8–10", basis: "Jan 2026 Q1b pattern likely to repeat", color: "#0891B2" },
+    { topic: "IFRS 8 Segments", prob: 72, marks: "5–7", basis: "3 consecutive sittings; absent Jan 2026 → likely return", color: "#0EA5E9" },
+  ],
+  studyPlan: [
+    { week: 1, topic: "Conceptual Framework + IAS 2", hours: 17, tier: "T1", papers: ["Jan 2026 Q1", "Sep 2025 Q1", "May 2023 Q6a"], target: "Essay templates + WIP costing rules" },
+    { week: 2, topic: "Cash Flow Statement (IAS 7)", hours: 21, tier: "T1", papers: ["May 2025 Q2", "Jan 2025 Q5", "Jan 2024 Q4", "Sep 2022 Q4b"], target: "Full indirect CFS from SFP in 25 min" },
+    { week: 3, topic: "EPS (IAS 33) + IFRS 5 + IAS 8", hours: 19, tier: "T1", papers: ["Jan 2026 Q3", "Sep 2025 Q3d", "Jan 2024 Q5c", "May 2023 Q5b"], target: "3-instrument diluted EPS in 15 min" },
+    { week: 4, topic: "IAS 37 Provisions + IAS 10 + IFRS 8", hours: 17, tier: "T1/T2", papers: ["Jan 2026 Q4a", "May 2025 Q4a", "Jan 2025 Q6c"], target: "PV provision calculation + essay" },
+    { week: 5, topic: "PPE (IAS 16, 36, 23)", hours: 18, tier: "T1", papers: ["Jan 2026 Q5a", "Jan 2024 Q6a", "May 2023 Q6c", "Sep 2022 Q6a"], target: "5 journal entry types from memory" },
+    { week: 6, topic: "IAS 38 Intangibles + IFRS 16 + Bonds", hours: 21, tier: "T1/T2", papers: ["Jan 2026 Q5b", "May 2025 Q5b", "Sep 2022 Q7b"], target: "Patent multi-year journals + lease schedule" },
+    { week: 7, topic: "IFRS 15 Revenue + IAS 12 Deferred Tax", hours: 19, tier: "T2", papers: ["Jan 2026 Q4b/c", "May 2025 Q4b", "Sep 2025 Q4c"], target: "Multiple temp differences + journals" },
+    { week: 8, topic: "Full Mocks + Final Revision", hours: 24, tier: "Exam", papers: ["Jan 2026 FULL", "Sep 2025 FULL"], target: "60+ marks under exam conditions" },
+  ],
+  mistakes: [
+    { no: 1, mistake: "Using asset COST instead of PROCEEDS for disposal in cash flow", marks: "3–4M", fix: "Proceeds = cash received. CV used only to compute gain/loss adjustment." },
+    { no: 2, mistake: "Not deducting cumulative preference dividends in Basic EPS", marks: "2–3M", fix: "Deduct even if not declared (cumulative prefs = always deduct from earnings)." },
+    { no: 3, mistake: "Including distribution costs in WIP inventory cost (IAS 2)", marks: "3–4M", fix: "WIP: RM + Direct Labour + Factory OH at normal capacity ONLY." },
+    { no: 4, mistake: "Continuing to depreciate after IFRS 5 held-for-sale classification", marks: "2M", fix: "Stop depreciation from the EXACT DATE of classification, not year-end." },
+    { no: 5, mistake: "Treating accounting policy change as estimate change (prospective)", marks: "3–5M", fix: "Policy change = RETROSPECTIVE. Estimate change = PROSPECTIVE." },
+    { no: 6, mistake: "Capitalising research costs (IAS 38)", marks: "2–3M", fix: "Research = ALWAYS expense. Only development (meeting PITFAR) = capitalise." },
+    { no: 7, mistake: "Creating deferred tax for permanent differences", marks: "3M", fix: "Fines, non-deductible entertainment = PERMANENT = NO deferred tax." },
+    { no: 8, mistake: "Including anti-dilutive instruments in diluted EPS", marks: "3M", fix: "If instrument's EPS impact > Basic EPS → anti-dilutive → EXCLUDE." },
+    { no: 9, mistake: "Putting non-cash activities inside the cash flow statement body", marks: "2M", fix: "Non-cash activities (lease inception, shares-for-debt) = supplemental NOTE only." },
+    { no: 10, mistake: "Using nominal values instead of PV for long-term provisions", marks: "3–4M", fix: "Discount future outflows when time value is material. Unwind annually." },
+  ],
+  eighty20: [
+    { rank: 1, topic: "Cash Flow Statement (IAS 7)", marks: "15–20M", time: "2 weeks", roi: 100, color: "#DC2626" },
+    { rank: 2, topic: "EPS Basic + Diluted (IAS 33)", marks: "8–12M", time: "1.5 weeks", roi: 90, color: "#EA580C" },
+    { rank: 3, topic: "PPE + Intangibles (IAS 16+38)", marks: "10–14M", time: "1.5 weeks", roi: 88, color: "#D97706" },
+    { rank: 4, topic: "IAS 2 Inventory WIP+NRV", marks: "8–10M", time: "1 week", roi: 82, color: "#0891B2" },
+    { rank: 5, topic: "Deferred Tax + Provisions", marks: "10–15M", time: "1.5 weeks", roi: 78, color: "#7C3AED" },
+    { rank: 6, topic: "Conceptual Framework + IFRS 5", marks: "8–10M", time: "5 days", roi: 85, color: "#059669" },
+  ],
+  mcqAnswers: [
+    { exam: "Jan 2022", ref: "Q1(i)", topic: "CF — underlying theme", answer: "(a) Decision usefulness" },
+    { exam: "Jan 2022", ref: "Q1(v)", topic: "Tax base of penalty", answer: "(a) Current liability [short-term notes]" },
+    { exam: "Jan 2022", ref: "Q1(viii)", topic: "Recoverable amount IAS 36", answer: "(c) CU22,000 [Higher of FVLCTS=18k & VIU=22k]" },
+    { exam: "May 2023", ref: "Q1(i)", topic: "PPE — not capitalised", answer: "(b) Employee costs for site selection" },
+    { exam: "May 2023", ref: "Q1(ii)", topic: "Depreciation revised residual", answer: "(a) Tk.17,000 [(100k−15k)/5]" },
+    { exam: "May 2023", ref: "Q1(iii)", topic: "Tax base of non-deductible fine", answer: "(d) Zero" },
+    { exam: "May 2023", ref: "Q1(v)", topic: "Value-in-use definition", answer: "(b) Discounted PV of future cash flows from use & disposal" },
+    { exam: "May 2023", ref: "Q1(vi)", topic: "Freedom from error = ?", answer: "(d) Faithful representation" },
+    { exam: "Jan 2024", ref: "Q1(ii)", topic: "Interest income — cash flow section", answer: "(d) a or c [operating OR investing]" },
+    { exam: "Jan 2024", ref: "Q1(iii)", topic: "Estimate change recognition", answer: "(b) Prospectively current + future periods" },
+    { exam: "Jan 2024", ref: "Q1(v)", topic: "Deductible diff Tk.100k @ 30%", answer: "(a) Tk.30,000 deferred tax asset" },
+    { exam: "Jan 2024", ref: "Q1(viii)", topic: "Patent impairment (IAS 36)", answer: "(c) Tk.25,000 [CV 400k − RA 375k]" },
+    { exam: "Jan 2025", ref: "Q1(i)", topic: "Not on face of SFP (IAS 1)", answer: "(d) Contingent liability" },
+    { exam: "Jan 2025", ref: "Q1(iii)", topic: "IAS 2 write-down reversal", answer: "(b) Can be reversed if NRV increases" },
+    { exam: "Jan 2025", ref: "Q1(vi)", topic: "Finance lease — NOT a criterion", answer: "(b) Purchase option at HIGHER than fair value" },
+    { exam: "May 2024", ref: "Q1(v)", topic: "IFRS 15 — when to recognise", answer: "(c) Performance obligation is satisfied" },
+    { exam: "May 2024", ref: "Q1(viii)", topic: "Diluted EPS formula", answer: "(c) Net income ÷ diluted weighted avg shares" },
+    { exam: "May 2024", ref: "Q1(ix)", topic: "Reportable segment criteria", answer: "(d) All 3 tests [revenue + P&L + assets]" },
+  ],
+};
+
+const TABS = [
+  { id: "dashboard", label: "Dashboard", icon: "⚡" },
+  { id: "frequency", label: "Frequency", icon: "📊" },
+  { id: "heatmap", label: "Heatmap", icon: "🗺️" },
+  { id: "topics", label: "Topics", icon: "📚" },
+  { id: "predictions", label: "Predictions", icon: "🎯" },
+  { id: "studyplan", label: "Study Plan", icon: "📅" },
+  { id: "mistakes", label: "Mistakes", icon: "⚠️" },
+  { id: "8020", label: "80/20", icon: "🏆" },
+  { id: "mcq", label: "MCQ Keys", icon: "✅" },
+];
+
+let state = { tab: "dashboard", selectedTopicId: null };
+
+function esc(s){ return String(s); }
+
+function badge(text, color, small){
+  return `<span class="badge${small?' small':''}" style="background:${color}20;color:${color};border:1px solid ${color}50;">${text}</span>`;
+}
+
+function statCard(value, label, sub, color){
+  return `<div class="statcard" style="border:1px solid ${color}40;">
+    <div class="val" style="color:${color};">${value}</div>
+    <div class="lbl">${label}</div>
+    ${sub? `<div class="sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+let barCounter = 0;
+const pendingBars = [];
+function animatedBar(value, max, color, delay){
+  const id = 'bar_' + (barCounter++);
+  pendingBars.push({ id, value, max, delay: delay||0 });
+  return `<div class="bar-track"><div class="bar-fill" id="${id}" style="background:${color};"></div></div>`;
+}
+function runPendingBars(){
+  const bars = pendingBars.splice(0, pendingBars.length);
+  bars.forEach(b => {
+    const el = document.getElementById(b.id);
+    if(!el) return;
+    setTimeout(() => { el.style.width = ((b.value / b.max) * 100) + '%'; }, b.delay + 100);
+  });
+}
+
+function topicCard(t, selected){
+  const total = t.appearances.filter(Boolean).length;
+  const pct = Math.round((total/13)*100);
+  const tierColor = t.tier===1?"#DC2626":t.tier===2?"#D97706":"#6366F1";
+  return `<div class="topiccard" data-topic-id="${t.id}" style="${selected? `background:${t.color}15;border-color:${t.color};` : ''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:700;color:${selected? t.color : '#e2e8f0'};line-height:1.3;">${t.label}</div>
+      ${badge(pct+'%', t.color, true)}
+    </div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${t.std}</div>
+    ${animatedBar(total, 13, t.color)}
+    <div style="display:flex;justify-content:space-between;margin-top:6px;">
+      <span style="font-size:10px;color:#475569;">${total}/13 exams</span>
+      ${badge('Tier '+t.tier, tierColor, true)}
+    </div>
+  </div>`;
+}
+
+function topicDetail(t){
+  if(!t){
+    return `<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#475569;font-size:14px;">← Select a topic to see details</div>`;
+  }
+  const nonZeroMarks = t.marks.filter(Boolean);
+  return `<div class="fade">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:14px;height:14px;border-radius:50%;background:${t.color};flex-shrink:0;"></div>
+      <div style="font-size:20px;font-weight:800;color:#f1f5f9;font-family:'Playfair Display',serif;">${t.label}</div>
+      ${badge(t.std, t.color)}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+      ${[["Appearances", `${t.appearances.filter(Boolean).length}/13`], ["Typical Marks", `${Math.min(...nonZeroMarks)}–${Math.max(...t.marks)}M`], ["Study Time", t.studyWeeks]].map(([l,v]) =>
+        `<div style="background:${t.color}10;border:1px solid ${t.color}30;border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;font-weight:800;color:${t.color};">${v}</div>
+          <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;margin-top:2px;">${l}</div>
+        </div>`).join('')}
+    </div>
+    <div style="background:${t.color}08;border:1px solid ${t.color}25;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:${t.color};font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Exam Pattern</div>
+      <div style="font-size:13px;color:#cbd5e1;">${t.qPattern}</div>
+    </div>
+    <div style="background:#dc262615;border:1px solid #dc262630;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:#DC2626;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">🔑 Key Fact</div>
+      <div style="font-size:13px;color:#fca5a5;">${t.keyFact}</div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Subtopics Tested</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${t.subtopics.map(s => `<span style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:3px 9px;font-size:11px;color:#94a3b8;">${s}</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderHeader(){
+  return `<div style="background:linear-gradient(90deg,#0f172a,#1e1b4b,#0f172a);border-bottom:1px solid #1e293b;padding:14px 24px;position:sticky;top:0;z-index:100;">
+    <div style="max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:20px;font-weight:800;font-family:'Playfair Display',serif;background:linear-gradient(90deg,#818cf8,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:shimmer 3s linear infinite;">
+          ICMAB CMA • FR222 IFA
+        </div>
+        <div style="font-size:11px;color:#475569;margin-top:1px;font-weight:600;letter-spacing:1px;">10-YEAR QUESTION ANALYSIS • DECEMBER 2026 EXAM PREP</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        ${badge('13 Sittings', '#818cf8')}
+        ${badge('15 Topics', '#38bdf8')}
+        ${badge('Target: 60+', '#10b981')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderNav(){
+  return `<div style="background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:57px;z-index:99;overflow-x:auto;">
+    <div style="max-width:1400px;margin:0 auto;display:flex;padding:0 24px;">
+      ${TABS.map(t => `<button class="navbtn${state.tab===t.id?' active':''}" data-tab="${t.id}"><span>${t.icon}</span>${t.label}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderDashboard(){
+  const tier1 = DATA.topics.filter(t => t.tier === 1);
+  return `<div class="fade">
+    <div style="margin-bottom:28px;">
+      <div style="font-size:28px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:4px;">Analysis Dashboard</div>
+      <div style="color:#64748b;font-size:13px;">Comprehensive intelligence from 13 exam sittings (Jan 2022 – Jan 2026)</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:28px;">
+      ${statCard('13','Sittings','Jan 2022 – Jan 2026','#818cf8')}
+      ${statCard('15','Topics Mapped','Across all questions','#38bdf8')}
+      ${statCard('6','T1 Topics','Must master','#DC2626')}
+      ${statCard('100%','Cash Flow','Appears every sitting','#10b981')}
+      ${statCard('2026','New Format','5×20M pure essay+comp','#f59e0b')}
+      ${statCard('60+','Pass Mark','Your target score','#a78bfa')}
+    </div>
+    <div style="background:linear-gradient(135deg,#7c3aed15,#dc262610);border:1px solid #7c3aed40;border-radius:16px;padding:18px 22px;margin-bottom:24px;display:flex;gap:16px;align-items:flex-start;">
+      <div style="font-size:28px;">⚡</div>
+      <div>
+        <div style="font-weight:700;color:#c4b5fd;font-size:15px;margin-bottom:6px;">CRITICAL: Format Changed Since May 2025</div>
+        <div style="color:#94a3b8;font-size:13px;line-height:1.7;">
+          <strong style="color:#fca5a5;">Old format (2022–2024):</strong> Section A (MCQ/T-F/Matching = 20 marks) + Section B (4×20M). MCQs gave 20 "easy" marks.<br />
+          <strong style="color:#86efac;">New format (2025–2026+):</strong> 5 questions × 20 marks. ZERO MCQs. Every mark needs written computation or structured essay.
+          <br /><span style="color:#fbbf24;font-weight:600;">Impact: You must now master both calculations AND essay-writing. Pre-written essay templates are essential.</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Top 6 Guaranteed Topics</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:28px;">
+      ${tier1.map((t,i) => {
+        const total = t.appearances.filter(Boolean).length;
+        return `<div class="dash-topic" data-goto-topic="${t.id}" style="cursor:pointer;background:#0f172a;border:1px solid ${t.color}35;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:${t.color}20;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:${t.color};flex-shrink:0;">${total}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px;">${t.label}</div>
+            ${animatedBar(total, 13, t.color, i*100)}
+            <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:#475569;">
+              <span>${Math.round((total/13)*100)}% frequency</span>
+              <span>${Math.min(...t.marks.filter(Boolean))}–${Math.max(...t.marks)}M per exam</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:20px 24px;">
+      <div style="font-size:14px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">Score Projection — 80/20 Strategy</div>
+      <div style="display:grid;gap:8px;">
+        ${DATA.eighty20.map(e => `<div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:22px;height:22px;border-radius:6px;background:${e.color}25;color:${e.color};font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${e.rank}</div>
+          <div style="font-size:12px;color:#94a3b8;width:220px;flex-shrink:0;">${e.topic}</div>
+          ${animatedBar(e.roi, 100, e.color, e.rank*80)}
+          <div style="width:50px;font-size:11px;font-weight:700;color:${e.color};text-align:right;flex-shrink:0;">${e.marks}</div>
+        </div>`).join('')}
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#64748b;">Scoring 75% on top 6 areas alone =</span>
+        <span style="font-size:22px;font-weight:800;color:#10b981;font-family:'Playfair Display',serif;">~54 marks</span>
+      </div>
+      <div style="font-size:11px;color:#475569;margin-top:4px;">Add medium-priority topics at 60% = <strong style="color:#38bdf8;">66–70M total — well above pass mark ✓</strong></div>
+    </div>
+  </div>`;
+}
+
+function renderFrequency(){
+  const sorted = [...DATA.topics].sort((a,b) => b.appearances.filter(Boolean).length - a.appearances.filter(Boolean).length);
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:18px;">Topic Frequency Analysis</div>
+    <div style="display:grid;gap:10px;">
+      ${sorted.map((t,i) => {
+        const cnt = t.appearances.filter(Boolean).length;
+        const pct = Math.round((cnt/13)*100);
+        const tierColor = t.tier===1?"#DC2626":t.tier===2?"#D97706":"#6366F1";
+        return `<div style="background:#0f172a;border:1px solid ${t.color}25;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+          <div style="width:28px;font-size:11px;font-weight:700;color:#475569;text-align:right;flex-shrink:0;">#${i+1}</div>
+          <div style="width:200px;font-size:13px;font-weight:600;color:#e2e8f0;flex-shrink:0;">${t.label}</div>
+          ${animatedBar(cnt, 13, t.color, i*60)}
+          <div style="width:60px;font-size:12px;font-weight:700;color:${t.color};text-align:right;flex-shrink:0;">${cnt}/13</div>
+          <div style="width:50px;flex-shrink:0;">${badge(pct+'%', t.color, true)}</div>
+          <div style="width:60px;flex-shrink:0;">${badge('T'+t.tier, tierColor, true)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function renderHeatmap(){
+  return `<div class="fade" style="overflow-x:auto;">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:8px;">Exam Heatmap</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:20px;">Topic presence across all 13 documented sittings. <span style="color:#10b981;">● appeared</span> · <span style="color:#334155;">— absent</span></div>
+    <div style="min-width:900px;">
+      <div style="display:grid;grid-template-columns:220px repeat(13,1fr) 60px;gap:3px;margin-bottom:3px;">
+        <div></div>
+        ${DATA.exams.map(e => `<div style="font-size:9px;color:#64748b;text-align:center;font-weight:600;padding:4px 2px;">${e.id}</div>`).join('')}
+        <div style="font-size:10px;color:#475569;text-align:center;">Total</div>
+      </div>
+      ${DATA.topics.map(t => {
+        const cnt = t.appearances.filter(Boolean).length;
+        return `<div style="display:grid;grid-template-columns:220px repeat(13,1fr) 60px;gap:3px;margin-bottom:3px;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:#94a3b8;padding-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.label}</div>
+          ${t.appearances.map((a,ai) => `<div title="${a? `${DATA.exams[ai].label}: ${t.marks[ai]}M` : `${DATA.exams[ai].label}: Not tested`}" style="height:28px;border-radius:5px;background:${a? t.color+'90' : '#1e293b'};display:flex;align-items:center;justify-content:center;font-size:13px;">
+            ${a? `<span style="color:#fff;font-weight:700;font-size:11px;">${t.marks[ai]}</span>` : `<span style="color:#334155;">–</span>`}
+          </div>`).join('')}
+          <div style="text-align:center;">${badge(cnt, t.color, true)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:16px;font-size:11px;color:#475569;">Numbers inside cells = marks awarded in that sitting. Hover for details.</div>
+  </div>`;
+}
+
+function renderTopics(){
+  const selected = DATA.topics.find(t => t.id === state.selectedTopicId) || null;
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:18px;">Topic Deep Dive</div>
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:20px;">
+      <div>
+        <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Select a topic to explore</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;">
+          ${DATA.topics.map(t => topicCard(t, selected && selected.id === t.id)).join('')}
+        </div>
+      </div>
+      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:22px;position:sticky;top:120px;align-self:start;max-height:calc(100vh - 140px);overflow-y:auto;">
+        ${topicDetail(selected)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPredictions(){
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:6px;">December 2026 Predictions</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:24px;">Based on frequency analysis, gap detection, and pattern trends from all 13 sittings</div>
+    <div style="display:grid;gap:14px;">
+      ${DATA.predictions.map(p => `<div class="pred-row" style="background:#0d1117;border:1.5px solid #1e293b;border-radius:16px;padding:18px 22px;transition:all .25s;" onmouseenter="this.style.background='#0f172a';this.style.borderColor='${p.color}';" onmouseleave="this.style.background='#0d1117';this.style.borderColor='#1e293b';">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div style="width:60px;height:60px;border-radius:14px;background:${p.color}20;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${p.color}40;">
+            <div style="font-size:18px;font-weight:800;color:${p.color};line-height:1;">${p.prob}%</div>
+            <div style="font-size:9px;color:#64748b;margin-top:2px;">likely</div>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:4px;">${p.topic}</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5;">${p.basis}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            ${badge(p.marks+'M', p.color)}
+            <div style="background:#1e293b;border-radius:8px;padding:4px 0;width:100px;">
+              <div style="height:6px;border-radius:8px;background:${p.color};width:${p.prob}%;transition:width 1s .2s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderStudyPlan(){
+  const colors = ["#DC2626","#DC2626","#D97706","#D97706","#7C3AED","#7C3AED","#059669","#374151"];
+  const finalDays = [
+    ["Day 7","Jan 2026 full mock — 180 min timed. Mark it. List weak points.","#DC2626"],
+    ["Day 6","Re-study every topic where you lost marks. Write model essay answers.","#EA580C"],
+    ["Day 5","Sep 2025 full mock — 180 min timed. Final format rehearsal.","#D97706"],
+    ["Day 4","Journal entry drill. Write ALL key journals from memory.","#059669"],
+    ["Day 3","Model essay templates. Memorise 5 structured answers.","#0891B2"],
+    ["Day 2","Formula sheet review ONLY. No new topics.","#7C3AED"],
+    ["Day 1","Skim standards list. Error log review. Sleep by 10pm.","#374151"],
+  ];
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:6px;">8-Week Study Plan</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:24px;">Optimised for December 2026 exam — aligned to frequency analysis</div>
+    <div style="display:grid;gap:12px;margin-bottom:28px;">
+      ${DATA.studyPlan.map((w,i) => {
+        const c = colors[i];
+        return `<div style="background:#0f172a;border:1px solid ${c}30;border-radius:14px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+          <div style="width:52px;height:52px;border-radius:12px;background:${c}20;border:2px solid ${c}60;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="font-size:16px;font-weight:800;color:${c};line-height:1;">W${w.week}</div>
+            <div style="font-size:9px;color:#475569;margin-top:1px;">${w.hours}h</div>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:4px;">${w.topic}</div>
+            <div style="font-size:12px;color:#10b981;margin-bottom:8px;">🎯 ${w.target}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">
+              ${w.papers.map(p => `<span style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:2px 8px;font-size:10px;color:#94a3b8;">${p}</span>`).join('')}
+            </div>
+          </div>
+          ${badge(w.tier, c)}
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="background:linear-gradient(135deg,#1e1b4b,#0f172a);border:1px solid #4f46e525;border-radius:16px;padding:20px 24px;">
+      <div style="font-size:15px;font-weight:700;color:#a5b4fc;margin-bottom:16px;">⚡ Last 7 Days — Final Countdown</div>
+      <div style="display:grid;gap:8px;">
+        ${finalDays.map(([d,a,c]) => `<div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:50px;font-size:11px;font-weight:700;color:${c};flex-shrink:0;padding-top:2px;">${d}</div>
+          <div style="flex:1;font-size:12px;color:#94a3b8;border-left:2px solid ${c}40;padding-left:12px;">${a}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMistakes(){
+  const tips = [
+    ["Reading time (15 min)","Read all 5 questions. Identify cash flow question. Circle all data. Do not write."],
+    ["35 min rule","Strict 35 minutes per question. Move on even if incomplete. Return with remaining time."],
+    ["Attempt order","Start with your strongest topic. Leave hardest for Q4. Build confidence first."],
+    ["Essay writing","Use numbered points, not paragraphs. 5 marks = 5 clear points. Cite the standard."],
+    ["Show all workings","Even wrong answers earn method marks. Label every step clearly."],
+    ["Draw templates first","Cash flow template (3 sections), EPS structure, deferred tax table — before writing numbers."],
+  ];
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:6px;">15 Most Common Mistakes</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:24px;">Identified from 10 years of exam pattern analysis — avoid these to protect your marks</div>
+    <div style="display:grid;gap:10px;">
+      ${DATA.mistakes.map(m => `<div style="background:#0f172a;border:1px solid #291110;border-radius:14px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:36px;height:36px;border-radius:10px;background:#dc262615;border:1px solid #dc262640;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#DC2626;flex-shrink:0;">${m.no}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:#fca5a5;margin-bottom:6px;">✗ ${m.mistake}</div>
+          <div style="font-size:12px;color:#86efac;display:flex;gap:6px;align-items:flex-start;">
+            <span style="color:#10b981;font-weight:700;">✓</span>
+            <span>${m.fix}</span>
+          </div>
+        </div>
+        ${badge('-'+m.marks, '#DC2626', true)}
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:24px;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:20px 24px;">
+      <div style="font-size:15px;font-weight:700;color:#38bdf8;margin-bottom:16px;">🏛️ Exam Hall Strategy — 180 Minutes</div>
+      <div style="display:grid;gap:10px;">
+        ${tips.map(([t,d]) => `<div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:150px;font-size:11px;font-weight:700;color:#38bdf8;flex-shrink:0;">${t}</div>
+          <div style="font-size:12px;color:#94a3b8;">${d}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function render8020(){
+  const rows = [
+    ["Cash Flow (75% of 18M)","#DC2626", 14, 18],
+    ["EPS (75% of 10M)","#EA580C", 8, 10],
+    ["PPE + Intangibles (75% of 12M)","#D97706", 9, 12],
+    ["Inventory (75% of 9M)","#0891B2", 7, 9],
+    ["Deferred Tax + Provisions (75% of 12M)","#7C3AED", 9, 12],
+    ["Conceptual + IFRS 5 (75% of 9M)","#059669", 7, 9],
+  ];
+  const actions = [
+    ["1", "Master indirect cash flow template", "5 hrs → 18M every exam"],
+    ["2", "Learn EPS calculation sequence", "7 hrs → 10M per exam"],
+    ["3", "Memorise 10 core journal entries", "3 hrs → 20M across questions"],
+    ["4", "Pre-write 5 model essay answers", "4 hrs → 20M in essays"],
+    ["5", "Complete 4 timed full mocks", "12 hrs → eliminates time loss"],
+  ];
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:6px;">80/20 Strategy</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:24px;">Maximum marks with minimum study time — the smart path to passing</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:28px;">
+      ${DATA.eighty20.map(e => `<div style="background:linear-gradient(135deg,#0f172a,#0d1117);border:1.5px solid ${e.color}40;border-radius:18px;padding:20px 22px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:${e.color}20;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:${e.color};">#${e.rank}</div>
+          ${badge(e.marks, e.color)}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:8px;line-height:1.3;">${e.topic}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:10px;">
+          <span>⏱ ${e.time}</span>
+          <span>ROI: ${e.roi}%</span>
+        </div>
+        <div style="background:#1e293b;border-radius:8px;height:8px;overflow:hidden;">
+          <div style="height:100%;border-radius:8px;background:linear-gradient(90deg,${e.color},${e.color}80);width:${e.roi}%;transition:width 1s ease;"></div>
+        </div>
+      </div>`).join('')}
+    </div>
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:22px 26px;margin-bottom:20px;">
+      <div style="font-size:14px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;">Projected Score — 80/20 Scenario</div>
+      <div style="display:grid;gap:10px;">
+        ${rows.map(([l,c,earned,total]) => `<div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0;"></div>
+          <div style="width:260px;font-size:12px;color:#94a3b8;flex-shrink:0;">${l}</div>
+          <div style="flex:1;background:#1e293b;border-radius:6px;height:10px;overflow:hidden;">
+            <div style="height:100%;background:${c};border-radius:6px;width:${(earned/20)*100}%;transition:width 1s ease;"></div>
+          </div>
+          <div style="width:50px;font-size:12px;font-weight:700;color:${c};text-align:right;flex-shrink:0;">${earned}M</div>
+        </div>`).join('')}
+      </div>
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid #1e293b;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;color:#64748b;">Top 6 topics total</div>
+            <div style="font-size:11px;color:#475569;margin-top:2px;">+ Medium topics at 60% ≈ +12–15M</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:32px;font-weight:800;color:#10b981;font-family:'Playfair Display',serif;">54M</div>
+            <div style="font-size:12px;color:#10b981;">→ 66–70M total ✓ PASS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,#0c4a6e,#0f172a);border:1px solid #0891b230;border-radius:16px;padding:20px 24px;">
+      <div style="font-size:14px;font-weight:700;color:#38bdf8;margin-bottom:14px;">⚡ 5 Actions Worth ~55 Marks (26 Hours Total)</div>
+      ${actions.map(([n,a,r]) => `<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:8px;background:#0891b220;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#38bdf8;flex-shrink:0;">${n}</div>
+        <div style="flex:1;font-size:13px;color:#e2e8f0;font-weight:500;">${a}</div>
+        <div style="font-size:11px;color:#10b981;flex-shrink:0;">${r}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderMcq(){
+  const mem = [
+    ["PIDTFAR→IAS38","Probable, Intention, Demonstrated ability, Technical feasibility, Financial resources, Adequate resources, Reliable measurement → Development capitalisation criteria"],
+    ["CIDAP→IFRS15","Contract → Identify POs → Determine price → Allocate → Perform → Five-step revenue model"],
+    ["POB→IAS37","Present Obligation + probable Outflow + reliable Best estimate → Provision recognition criteria"],
+    ["AHMS→IFRS5","Available now + Highly probable + Management committed + Suitable for sale → Held-for-sale criteria"],
+    ["DEAR→Essays","Define + Explain rule + Apply to scenario + Recommend/conclude → Perfect essay structure every time"],
+  ];
+  return `<div class="fade">
+    <div style="font-size:24px;font-weight:800;font-family:'Playfair Display',serif;color:#f1f5f9;margin-bottom:6px;">MCQ Answer Key</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:16px;">Correct answers from all old-format sittings (2022–2024). Note: New format (2025+) has no MCQs.</div>
+    <div style="background:#dc262610;border:1px solid #dc262630;border-radius:12px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:#fca5a5;">
+      ⚠️ The new exam format (May 2025 onwards) has NO Section A MCQs. These answers are for historical practice and theory revision only.
+    </div>
+    <div style="display:grid;gap:8px;">
+      ${DATA.mcqAnswers.map(m => `<div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;display:grid;grid-template-columns:110px 70px 1fr 1fr;gap:10px;align-items:center;">
+        <div style="font-size:11px;font-weight:700;color:#818cf8;">${m.exam}</div>
+        <div style="font-size:11px;color:#475569;">${m.ref}</div>
+        <div style="font-size:12px;color:#94a3b8;">${m.topic}</div>
+        <div style="font-size:12px;font-weight:600;color:#86efac;background:#10b98115;border:1px solid #10b98130;border-radius:8px;padding:3px 10px;">${m.answer}</div>
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:24px;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:20px 24px;">
+      <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:14px;">🧠 Memorisation Methods</div>
+      <div style="display:grid;gap:10px;">
+        ${mem.map(([k,v]) => `<div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="background:#4f46e520;border:1px solid #4f46e540;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:800;color:#a78bfa;flex-shrink:0;white-space:nowrap;">${k}</div>
+          <div style="font-size:12px;color:#94a3b8;">${v}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTab(){
+  switch(state.tab){
+    case 'dashboard': return renderDashboard();
+    case 'frequency': return renderFrequency();
+    case 'heatmap': return renderHeatmap();
+    case 'topics': return renderTopics();
+    case 'predictions': return renderPredictions();
+    case 'studyplan': return renderStudyPlan();
+    case 'mistakes': return renderMistakes();
+    case '8020': return render8020();
+    case 'mcq': return renderMcq();
+    default: return '';
+  }
+}
+
+function render(){
+  barCounter = 0;
+  pendingBars.length = 0;
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    ${renderHeader()}
+    ${renderNav()}
+    <div style="max-width:1400px;margin:0 auto;padding:24px 24px 40px;">
+      ${renderTab()}
+    </div>
+  `;
+  attachEvents();
+  runPendingBars();
+}
+
+function attachEvents(){
+  document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.tab = btn.getAttribute('data-tab');
+      render();
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    });
+  });
+  document.querySelectorAll('[data-topic-id]').forEach(card => {
+    card.addEventListener('click', () => {
+      state.selectedTopicId = card.getAttribute('data-topic-id');
+      render();
+    });
+  });
+  document.querySelectorAll('[data-goto-topic]').forEach(card => {
+    card.addEventListener('click', () => {
+      state.tab = 'topics';
+      state.selectedTopicId = card.getAttribute('data-goto-topic');
+      render();
+    });
+  });
+}
+
+render();
+</script>
+</body>
+</html>

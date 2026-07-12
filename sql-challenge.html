@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>SQL Track — 90 Days Data Analyst Challenge (2026)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #3b82f6;
+    --accent-dim: #1e3a8a;
+    --accent-rgb: 59,130,246;
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #0a0e14;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(var(--accent-rgb),0.08), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(var(--accent-rgb),0.05), transparent 45%);
+    font-family: 'Inter', sans-serif;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+  .accent-text { color: var(--accent); }
+  .accent-bg { background-color: var(--accent); }
+  .accent-border { border-color: var(--accent); }
+  ::selection { background: rgba(var(--accent-rgb),0.35); }
+  .glass {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+  }
+  .day-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: all 0.18s ease;
+  }
+  .day-card:hover {
+    border-color: rgba(var(--accent-rgb),0.6);
+    background: rgba(var(--accent-rgb),0.06);
+    transform: translateY(-2px);
+  }
+  .day-card.completed {
+    border-color: rgba(var(--accent-rgb),0.45);
+    background: rgba(var(--accent-rgb),0.05);
+  }
+  .progress-track {
+    background: rgba(255,255,255,0.06);
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    transition: width 0.6s cubic-bezier(.16,1,.3,1);
+  }
+  .quiz-option {
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  .quiz-option:hover:not(.locked) {
+    border-color: rgba(var(--accent-rgb),0.5);
+    background: rgba(var(--accent-rgb),0.06);
+  }
+  .quiz-correct {
+    border-color: #10b981 !important;
+    background: rgba(16,185,129,0.14) !important;
+    color: #6ee7b7;
+  }
+  .quiz-incorrect {
+    border-color: #ef4444 !important;
+    background: rgba(239,68,68,0.14) !important;
+    color: #fca5a5;
+  }
+  .code-box {
+    background: #050709;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .fade-in { animation: fadeIn 0.35s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform:translateY(0);} }
+  .scanline {
+    background: repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(var(--accent-rgb),0.4); }
+  .cell-ref {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.35);
+  }
+  .grid-overlay {
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+  button:focus-visible, [tabindex]:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div class="grid-overlay fixed inset-0 pointer-events-none opacity-40"></div>
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-40 glass">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-lg flex items-center justify-center font-display font-bold text-lg shrink-0" style="background: rgba(var(--accent-rgb),0.15); color: var(--accent); border:1px solid rgba(var(--accent-rgb),0.35);">
+        &gt;_
+      </div>
+      <div class="min-w-0">
+        <p class="cell-ref uppercase">PHASE 02 · DAYS 31\u201360</p>
+        <h1 class="font-display font-bold text-lg sm:text-xl truncate">SQL Track</h1>
+      </div>
+    </div>
+    <div class="hidden md:flex items-center gap-2 font-mono text-xs">
+      <a href="excel-challenge.html" class="glass px-3 py-2 rounded-lg hover:text-white text-slate-400 transition-colors">Excel Track — Days 1–30</a>
+<a href="powerbi-challenge.html" class="glass px-3 py-2 rounded-lg hover:text-white text-slate-400 transition-colors">Power BI Track — Days 61–90</a>
+    </div>
+    <button id="navBtn" class="md:hidden p-2 rounded-lg glass" aria-label="Other tracks">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="mobileNav" class="hidden md:hidden glass border-t border-white/5 px-4 py-3 flex flex-col gap-2 font-mono text-xs">
+    <a href="excel-challenge.html" class="glass px-3 py-2 rounded-lg text-slate-300">Excel Track — Days 1–30</a>
+<a href="powerbi-challenge.html" class="glass px-3 py-2 rounded-lg text-slate-300">Power BI Track — Days 61–90</a>
+  </div>
+</header>
+
+<!-- ============ DASHBOARD VIEW ============ -->
+<main id="dashboardView" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+  <section class="mb-10 sm:mb-14 fade-in">
+    <p class="cell-ref uppercase mb-2">SELECT mastery FROM progress WHERE track = 'sql';</p>
+    <h2 class="font-display font-bold text-3xl sm:text-5xl leading-tight mb-3">
+      Thirty days to query<br class="hidden sm:block"> <span class="accent-text">relational data like an engineer.</span>
+    </h2>
+    <p class="text-slate-400 max-w-2xl text-sm sm:text-base">From SELECT to window functions and CTEs: build the query fluency that turns a raw database into an answer, one module at a time.</p>
+  </section>
+
+  <!-- Progress tracker -->
+  <section class="glass rounded-2xl p-5 sm:p-7 mb-10 sm:mb-14 fade-in">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
+      <div>
+        <p class="cell-ref uppercase mb-1">SQL Progress Tracker</p>
+        <p class="font-display font-bold text-2xl sm:text-3xl">
+          <span id="progressCount" class="accent-text">0</span><span class="text-slate-500">/30 days completed</span>
+        </p>
+      </div>
+      <div class="flex gap-6 font-mono text-xs text-slate-400">
+        <div><span class="block text-slate-200 font-semibold text-base" id="statPct">0%</span>mastery</div>
+        <div><span class="block text-slate-200 font-semibold text-base" id="statStreak">0</span>current streak</div>
+        <div><span class="block text-slate-200 font-semibold text-base" id="statQuiz">0%</span>quiz accuracy</div>
+      </div>
+    </div>
+    <div class="progress-track h-3 rounded-full overflow-hidden">
+      <div id="progressFill" class="progress-fill h-full rounded-full" style="width:0%"></div>
+    </div>
+  </section>
+
+  <!-- Day grid -->
+  <section class="fade-in">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-display font-semibold text-lg sm:text-xl">30-Day Query Modules</h3>
+      <p class="cell-ref uppercase hidden sm:block">CLICK A MODULE TO BEGIN</p>
+    </div>
+    <div id="dayGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"></div>
+  </section>
+
+</main>
+
+<!-- ============ LESSON VIEW ============ -->
+<main id="lessonView" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+  <button id="backBtn" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 p-2 -ml-2 rounded-lg transition-colors">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    Back to all days
+  </button>
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <p class="cell-ref uppercase mb-1" id="lessonDayLabel"></p>
+      <h2 id="lessonTitle" class="font-display font-bold text-2xl sm:text-4xl"></h2>
+    </div>
+    <label class="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer select-none shrink-0">
+      <input type="checkbox" id="completeCheckbox" class="w-5 h-5 rounded accent-current" style="accent-color: var(--accent);">
+      <span class="font-mono text-sm">Mark as Completed</span>
+    </label>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <!-- Left pane -->
+    <div class="space-y-6">
+      <div class="glass rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-3">TECHNICAL SUMMARY</p>
+        <p id="lessonSummary" class="text-slate-300 leading-relaxed text-sm sm:text-base"></p>
+      </div>
+      <div class="code-box rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full accent-bg inline-block"></span>QUERY SYNTAX
+        </p>
+        <pre id="lessonSyntax" class="font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto whitespace-pre-wrap accent-text"></pre>
+      </div>
+    </div>
+
+    <!-- Right pane -->
+    <div class="space-y-6">
+      <div class="glass rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-3">BUSINESS CONTEXT</p>
+        <p id="lessonScenario" class="text-slate-300 leading-relaxed text-sm sm:text-base"></p>
+      </div>
+      <div class="glass rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-4">QUERY LOGIC CHECK</p>
+        <div id="quizContainer" class="space-y-6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
+    <button id="prevDayBtn" class="glass px-4 py-3 rounded-xl font-mono text-xs sm:text-sm flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg> Prev
+    </button>
+    <button id="nextDayBtn" class="accent-bg text-black font-semibold px-4 py-3 rounded-xl font-mono text-xs sm:text-sm flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed">
+      Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
+  <p class="cell-ref uppercase">90 DAYS DATA ANALYST CHALLENGE · 2026 EDITION · SQL MODULE</p>
+</footer>
+
+<script>
+const STORAGE_PREFIX = "sql_day_";
+const DAY_OFFSET = 31 - 1;
+const DAYS = [{"day": 1, "title": "Introduction to SQL & Data Architecture", "summary": "SQL (Structured Query Language) is the standard language for interacting with relational databases, but 2026's modern databases have expanded beyond raw tabular text: they now natively support Vector Data types and semantic search, letting a database store embeddings alongside traditional rows for AI-powered similarity queries. Understanding the classic relational model — tables, rows, columns, primary keys — is still the essential foundation everything else builds on.", "syntax": "-- Classic relational query\nSELECT * FROM customers;\n\n-- Modern vector similarity query (conceptual)\nSELECT product_name\nFROM products\nORDER BY embedding <-> query_embedding\nLIMIT 5;", "scenario": "Your e-commerce platform wants a 'customers who bought similar products' recommendation feature. A traditional relational query can only match on exact categories or tags. A modern vector-enabled database instead compares product embeddings for semantic similarity, returning genuinely 'similar' items even when no shared keyword exists between them.", "quiz": [{"q": "What is the primary role of SQL?", "options": ["A general-purpose programming language for building applications", "A standard language for querying and managing relational databases", "A markup language for web pages", "A spreadsheet formula language"], "correct": 1, "explain": "SQL is specifically designed for defining, querying, and managing data in relational database systems."}, {"q": "What new capability do modern (2026) relational databases add alongside traditional tabular data?", "options": ["The ability to store only images", "Native vector data types supporting semantic/similarity search", "Removal of the SELECT statement", "Automatic deletion of old rows"], "correct": 1, "explain": "Vector data types let databases store embeddings for AI-driven similarity search, extending beyond exact-match relational queries."}]}, {"day": 2, "title": "Installing MySQL / SQL Server 2025", "summary": "Setting up a local or cloud database instance is the first hands-on step, and by 2026 the standard approach for many organizations has shifted toward cloud integration via Azure Arc and pay-as-you-go consumption models rather than solely managing on-premise installations — meaning analysts increasingly provision database capacity on demand instead of waiting on fixed local server installs.", "syntax": "-- Verify installation via command line\nmysql --version\nsqlcmd -S localhost -Q \"SELECT @@VERSION\"\n\n-- Cloud provisioning (conceptual, Azure CLI)\naz sql server create --name myserver --resource-group myRG", "scenario": "Your team needs a new database environment for a three-month analytics project, not a permanent installation. Rather than provisioning a full on-premise SQL Server license, you spin up a pay-as-you-go Azure SQL instance, scaled to the project's needs, and decommission it when the project ends — avoiding both upfront licensing cost and idle server capacity.", "quiz": [{"q": "What is a defining shift in 2026 database provisioning compared to traditional on-premise setup?", "options": ["Databases can no longer be installed locally", "Cloud integration via pay-as-you-go models (e.g., Azure Arc) is now standard for elastic provisioning", "SQL Server no longer supports Windows", "MySQL has been discontinued"], "correct": 1, "explain": "Elastic, consumption-based cloud provisioning has become the standard alongside (not fully replacing) traditional installs."}, {"q": "Which command-line tool is used to verify a MySQL installation's version?", "options": ["sqlcmd", "mysql --version", "az sql", "SELECT VERSION FROM SYS"], "correct": 1, "explain": "`mysql --version` is the standard MySQL client command to confirm the installed version."}]}, {"day": 3, "title": "Database & Table Basics", "summary": "Databases organize data into tables, each with defined columns and data types, and modern schema design now treats JSON as a first-class data type rather than storing structured JSON as plain text. Choosing a native JSON column over a text field enables the database engine to validate, index, and query JSON structure directly, rather than treating it as an opaque string.", "syntax": "CREATE TABLE orders (\n  order_id INT PRIMARY KEY,\n  customer_id INT,\n  order_date DATE,\n  metadata JSON\n);\n\n-- Querying inside a native JSON column\nSELECT metadata->>'$.shipping_method' FROM orders;", "scenario": "Your orders table needs to store variable shipping metadata — sometimes a courier name, sometimes an address override, sometimes a special instruction — that doesn't fit a fixed column structure. Storing this as native JSON rather than a plain text blob lets you query specific fields like metadata->>'$.shipping_method' directly in SQL, instead of parsing text in application code.", "quiz": [{"q": "Why is using a native JSON data type preferred over storing JSON as plain text?", "options": ["It uses less disk space in all cases", "It allows the database to validate, index, and query the JSON structure directly", "It removes the need for a schema", "JSON columns cannot be queried at all"], "correct": 1, "explain": "Native JSON support enables structured querying and indexing of the JSON content, unlike an opaque text field."}, {"q": "What does the PRIMARY KEY constraint on order_id enforce?", "options": ["That the column can contain duplicate values", "That each value in the column uniquely identifies a row and cannot be NULL", "That the column stores only text", "That the table cannot be queried"], "correct": 1, "explain": "A PRIMARY KEY guarantees uniqueness and non-null values, serving as the table's unique row identifier."}]}, {"day": 4, "title": "SELECT Statement", "summary": "SELECT is the foundational statement for retrieving data, and modern SQL editors now integrate AI prompting directly with IntelliSense — meaning you can get context-aware autocomplete suggestions that understand your actual table schema, not just generic keyword completion, dramatically speeding up the process of writing large, multi-table SELECT queries.", "syntax": "SELECT customer_id, order_date, total_amount\nFROM orders\nWHERE order_date >= '2026-01-01';\n\nSELECT DISTINCT region FROM customers;", "scenario": "You're handed a database with 40 tables and no documentation. Instead of manually browsing schema diagrams, you start typing a SELECT statement in a modern SQL editor, and AI-integrated IntelliSense suggests relevant column names and even likely JOIN paths based on foreign key relationships it has already scanned in the schema.", "quiz": [{"q": "What does the SELECT DISTINCT clause do?", "options": ["Selects all rows including duplicates", "Returns only unique values for the specified column(s)", "Deletes duplicate rows from the table", "Sorts the result set descending"], "correct": 1, "explain": "DISTINCT filters the result set down to unique combinations of the selected columns."}, {"q": "What advantage does AI-integrated IntelliSense provide in a modern SQL editor?", "options": ["It automatically executes queries without review", "Schema-aware autocomplete suggestions based on your actual tables and relationships", "It removes the need for a WHERE clause", "It converts SQL to Python automatically"], "correct": 1, "explain": "Unlike generic keyword completion, schema-aware IntelliSense suggests real column names and likely join paths from your specific database."}]}, {"day": 5, "title": "WHERE Clause", "summary": "The WHERE clause filters rows before aggregation occurs, and query performance hinges heavily on whether the filtered column is indexed — filtering on an indexed column allows the query optimizer to skip scanning the entire table, while filtering on a non-indexed column often forces a full table scan.", "syntax": "SELECT * FROM transactions\nWHERE transaction_date BETWEEN '2026-01-01' AND '2026-03-31'\n  AND status = 'Completed';\n\nCREATE INDEX idx_txn_date ON transactions(transaction_date);", "scenario": "A report that filters 50 million transaction rows by date is taking 40 seconds to run. After confirming transaction_date has no index, you create one — CREATE INDEX idx_txn_date ON transactions(transaction_date) — and the same query drops to under a second, because the optimizer can now seek directly to the relevant date range instead of scanning every row.", "quiz": [{"q": "Why does filtering on an indexed column improve WHERE clause performance?", "options": ["Indexes automatically delete unmatched rows", "The query optimizer can seek directly to relevant rows instead of scanning the entire table", "Indexes convert text to numbers", "It has no effect on performance"], "correct": 1, "explain": "An index acts like a lookup structure, letting the optimizer avoid a full table scan for filtered queries."}, {"q": "What does BETWEEN '2026-01-01' AND '2026-03-31' include?", "options": ["Only dates strictly after 2026-01-01 and before 2026-03-31, excluding both endpoints", "Both endpoint dates and everything in between (inclusive)", "Only the two exact endpoint dates", "Dates outside that range"], "correct": 1, "explain": "BETWEEN is inclusive of both boundary values in standard SQL."}]}, {"day": 6, "title": "Comparison Operators", "summary": "Comparison operators (=, <>, >, <, >=, <=) form the building blocks of any filter condition, but correctly handling NULL values and fuzzy/approximate matching requires more care — a NULL value never equals anything, including another NULL, so comparisons involving potential NULLs must be explicitly designed rather than assumed to behave like ordinary values.", "syntax": "SELECT * FROM customers WHERE email IS NULL;\nSELECT * FROM customers WHERE email IS NOT NULL;\nSELECT * FROM products WHERE price <> 0;\n-- WRONG: WHERE email = NULL   (always returns no rows)", "scenario": "A junior analyst writes WHERE discount_code = NULL to find customers without a discount code, and the query silently returns zero rows every time — not because no such customers exist, but because NULL can never equal anything with the standard = operator. The correct fix is WHERE discount_code IS NULL, which uses the proper NULL-testing syntax.", "quiz": [{"q": "Why does the condition WHERE column = NULL always return zero rows?", "options": ["NULL is treated as the number 0", "NULL represents an unknown value, and no comparison using = can ever evaluate to true against it", "It's a syntax error", "= NULL only works with text columns"], "correct": 1, "explain": "NULL means 'unknown', so any equality comparison against it is also unknown (not true), hence IS NULL must be used instead."}, {"q": "Which operator correctly tests for NULL values in standard SQL?", "options": ["= NULL", "IS NULL", "== NULL", "LIKE NULL"], "correct": 1, "explain": "IS NULL (and IS NOT NULL) is the only correct syntax for testing NULL in standard SQL."}]}, {"day": 7, "title": "AND, OR, NOT Operators & Modern RegEx", "summary": "AND, OR, and NOT combine multiple filter conditions into complex logic, and modern SQL engines have significantly expanded native Regular Expression support — meaning complex text-pattern filtering that once required chained LIKE clauses with wildcards can now be expressed as a single, more precise regex pattern.", "syntax": "SELECT * FROM orders\nWHERE (status = 'Pending' OR status = 'Processing')\n  AND NOT customer_id IS NULL;\n\n-- Modern RegEx filtering\nSELECT * FROM customers\nWHERE email REGEXP '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$';", "scenario": "You need to find all customer records with malformed email addresses before a marketing campaign launches. Chaining multiple LIKE '%@%' conditions can't reliably validate proper email structure, but a single REGEXP pattern checking for the standard email format catches malformed entries precisely in one filter condition.", "quiz": [{"q": "What logical result does WHERE (status = 'Pending' OR status = 'Processing') AND NOT customer_id IS NULL produce?", "options": ["Rows where status is anything except Pending or Processing", "Rows where status is Pending or Processing, and customer_id is not NULL", "Rows where customer_id is always NULL", "Only rows where status is Pending"], "correct": 1, "explain": "The OR groups the two status conditions, and AND NOT ... IS NULL additionally requires customer_id to be populated."}, {"q": "What is the main advantage of REGEXP over chained LIKE conditions for text validation?", "options": ["REGEXP is always faster regardless of pattern complexity", "REGEXP can express complex, precise patterns (like valid email structure) in a single condition", "LIKE cannot use wildcards at all", "REGEXP only works on numeric columns"], "correct": 1, "explain": "Regular expressions allow precise structural pattern matching that multiple LIKE wildcards struggle to replicate accurately."}]}, {"day": 8, "title": "ORDER BY Clause", "summary": "ORDER BY sorts the final result set by one or more columns, ascending (default) or descending, and while sorting logic itself is simple, sorting large unindexed tables can be a major performance bottleneck — considering indexing strategy before sorting billions of rows is a standard senior-analyst habit.", "syntax": "SELECT customer_name, total_spent\nFROM customers\nORDER BY total_spent DESC, customer_name ASC;\n\nCREATE INDEX idx_spent ON customers(total_spent DESC);", "scenario": "A leaderboard report ranking the top 10,000 customers by lifetime spend, run against a 200-million-row table, was timing out. Because total_spent had no index, every run forced a full sort of the entire table. Adding an index specifically on total_spent DESC let the engine retrieve pre-sorted data far more efficiently, resolving the timeout.", "quiz": [{"q": "What is the default sort direction in ORDER BY if not specified?", "options": ["DESC (descending)", "ASC (ascending)", "Random order", "No default; it must always be specified"], "correct": 1, "explain": "ASC is the implicit default sort order when neither ASC nor DESC is written."}, {"q": "Why should indexing be considered before sorting very large tables?", "options": ["Indexing has no effect on sort performance", "Sorting large unindexed tables can be a major performance bottleneck; an appropriate index can significantly speed it up", "ORDER BY cannot work without an index", "Indexes remove the need for ORDER BY entirely"], "correct": 1, "explain": "Without an index, the engine must fully sort the data at query time; an index on the sort column can avoid this cost."}]}, {"day": 9, "title": "LIMIT / TOP / FETCH & Batch Mode", "summary": "LIMIT (MySQL/Postgres), TOP (SQL Server), and FETCH (standard SQL) all restrict the number of rows returned, essential for previewing data or building paginated reports. Modern engines' Batch Mode Processing executes queries in vectorized batches of rows rather than one row at a time, meaning LIMIT/TOP queries against very large tables execute significantly faster than in older row-by-row engines.", "syntax": "-- MySQL/Postgres\nSELECT * FROM orders ORDER BY order_date DESC LIMIT 10;\n\n-- SQL Server\nSELECT TOP 10 * FROM orders ORDER BY order_date DESC;\n\n-- Standard SQL\nSELECT * FROM orders ORDER BY order_date DESC FETCH FIRST 10 ROWS ONLY;", "scenario": "A dashboard needs to display only the 10 most recent orders out of a 50-million-row table, refreshed every few seconds. Using TOP 10 with an ORDER BY on an indexed date column, combined with the engine's Batch Mode Processing, keeps this near-instant even at massive scale, rather than the engine evaluating and sorting the entire table for every refresh.", "quiz": [{"q": "Which keyword restricts result rows in SQL Server, as opposed to MySQL's LIMIT?", "options": ["FETCH", "TOP", "MAX", "ROWNUM"], "correct": 1, "explain": "SQL Server uses TOP N syntax, while MySQL and PostgreSQL use LIMIT N."}, {"q": "What does Batch Mode Processing improve in modern database engines?", "options": ["It processes rows one at a time for accuracy", "It processes data in vectorized batches, improving performance on large-scale queries", "It only affects INSERT statements", "It disables indexing"], "correct": 1, "explain": "Vectorized, batch-based execution processes many rows together rather than row-by-row, significantly boosting performance at scale."}]}, {"day": 10, "title": "Aggregate Functions (COUNT, SUM, AVG, MIN, MAX)", "summary": "Aggregate functions collapse multiple rows into a single summary value, and a classic distinction analysts must know cold is that COUNT(*) counts every row regardless of content, while COUNT(column_name) counts only rows where that specific column is not NULL — a subtle difference that can silently produce different totals.", "syntax": "SELECT COUNT(*) AS total_rows,\n       COUNT(email) AS rows_with_email,\n       SUM(order_total) AS revenue,\n       AVG(order_total) AS avg_order,\n       MIN(order_date) AS first_order,\n       MAX(order_date) AS last_order\nFROM orders;", "scenario": "A data quality audit needs to know both 'how many total orders exist' and 'how many orders are missing a recorded email.' Running COUNT(*) gives the true total row count, while COUNT(email) gives only the count of rows where email isn't NULL — the difference between the two numbers directly reveals how many records have missing email data.", "quiz": [{"q": "What is the key difference between COUNT(*) and COUNT(column_name)?", "options": ["They are functionally identical in every case", "COUNT(*) counts all rows; COUNT(column_name) counts only rows where that column is not NULL", "COUNT(column_name) is always faster", "COUNT(*) ignores duplicate rows automatically"], "correct": 1, "explain": "COUNT(*) counts every row regardless of NULLs, while COUNT(column) skips NULL values in that specific column."}, {"q": "Which aggregate function would find the earliest order date in a table?", "options": ["MAX(order_date)", "MIN(order_date)", "AVG(order_date)", "SUM(order_date)"], "correct": 1, "explain": "MIN() returns the smallest (earliest, for dates) value in the specified column."}]}, {"day": 11, "title": "GROUP BY Clause", "summary": "GROUP BY collapses rows sharing a common value into groups, allowing aggregate functions to be calculated per group rather than across the entire table — for example, total sales per region rather than one grand total. Adaptive Query Processing works quietly in the background of modern engines to optimize how these grouping operations execute, particularly for skewed or unevenly-distributed data.", "syntax": "SELECT region, COUNT(*) AS order_count, SUM(total_amount) AS revenue\nFROM orders\nGROUP BY region\nORDER BY revenue DESC;", "scenario": "Leadership wants to know total revenue and order count broken down by region, not a single company-wide total. GROUP BY region collapses thousands of individual order rows into one summary row per region, with SUM and COUNT calculated independently within each group — turning a raw transaction log into an executive-ready regional summary in one query.", "quiz": [{"q": "What does GROUP BY do to the rows in a result set?", "options": ["Deletes rows with duplicate values", "Collapses rows sharing a common value into groups, enabling per-group aggregation", "Sorts rows without changing row count", "Removes NULL values from the table"], "correct": 1, "explain": "GROUP BY organizes rows into groups by shared column values so aggregate functions can be computed per group."}, {"q": "In the query SELECT region, SUM(total_amount) FROM orders GROUP BY region, what does SUM(total_amount) represent for each row?", "options": ["The total across all regions combined", "The sum of total_amount within that specific region's group only", "A random sample value", "The count of rows in the region"], "correct": 1, "explain": "Once grouped, SUM operates independently within each group (region), not across the whole table."}]}, {"day": 12, "title": "HAVING Clause", "summary": "HAVING filters groups after aggregation has already occurred, which is the critical distinction from WHERE — a classic interview question tests whether you know WHERE executes before grouping (filtering individual rows) while HAVING executes after grouping (filtering aggregated group results, like 'only regions with total sales over 1 million').", "syntax": "SELECT region, SUM(total_amount) AS revenue\nFROM orders\nGROUP BY region\nHAVING SUM(total_amount) > 1000000\nORDER BY revenue DESC;", "scenario": "You need a list of only the regions whose total revenue exceeds ৳10 million — not all regions. Since 'total revenue exceeds ৳10 million' is a condition on an aggregated value, it must go in HAVING, not WHERE; putting SUM(total_amount) > 10000000 in a WHERE clause would actually raise a syntax error since WHERE runs before aggregates are computed.", "quiz": [{"q": "What is the fundamental difference between WHERE and HAVING?", "options": ["They are interchangeable in every SQL query", "WHERE filters individual rows before grouping; HAVING filters aggregated groups after grouping", "HAVING can only be used without GROUP BY", "WHERE only works with numeric columns"], "correct": 1, "explain": "This execution-order distinction — WHERE before aggregation, HAVING after — is a classic and frequently tested SQL concept."}, {"q": "Why would `WHERE SUM(total_amount) > 1000000` typically cause an error?", "options": ["WHERE cannot contain numbers", "Aggregate functions like SUM haven't been computed yet at the point WHERE is evaluated", "SUM is not a valid SQL function", "GROUP BY is required before any WHERE clause"], "correct": 1, "explain": "WHERE executes before aggregation, so referencing an aggregate result there is invalid — that logic belongs in HAVING."}]}, {"day": 13, "title": "Aliases in SQL", "summary": "Aliases (using AS) rename columns or tables for the duration of a query, improving readability especially in complex, multi-join queries feeding into Power BI or dashboard tools where clear, descriptive labels reduce ambiguity and make downstream tracking of a query's origin far easier for the next person who reads it.", "syntax": "SELECT c.customer_name AS customer,\n       SUM(o.total_amount) AS total_revenue\nFROM customers AS c\nJOIN orders AS o ON c.customer_id = o.customer_id\nGROUP BY c.customer_name;", "scenario": "A 12-table query feeding a Power BI report becomes unreadable without aliases — table names like tbl_cust_master_v2 clutter every column reference. Using short aliases like c for customers and o for orders, plus descriptive output aliases like AS total_revenue, makes both the query logic and the resulting report column headers immediately clear to anyone maintaining it later.", "quiz": [{"q": "What is the primary purpose of using column or table aliases (AS) in SQL?", "options": ["To permanently rename the underlying table", "To improve readability and provide clearer, temporary labels for the duration of the query", "To speed up query execution", "To create a new physical table"], "correct": 1, "explain": "Aliases are query-scoped labels for readability and clarity; they don't alter the actual underlying schema."}, {"q": "Why are aliases especially valuable in complex multi-join queries feeding a BI tool?", "options": ["They automatically create relationships between tables", "They make column references shorter and output labels clearer for readability and downstream reporting", "They are required for JOIN to function at all", "They convert text columns to numeric"], "correct": 1, "explain": "Clear aliases reduce ambiguity across many joined tables and produce more understandable column headers in the final report."}]}, {"day": 14, "title": "Joins - INNER JOIN", "summary": "INNER JOIN returns only the rows where a match exists in both joined tables, discarding any row from either table that has no corresponding match. A key performance consideration is that join columns should share matching data types — a mismatch (e.g., joining an INT to a VARCHAR) can prevent the optimizer from using indexes efficiently, forcing implicit conversions that slow the query.", "syntax": "SELECT o.order_id, c.customer_name, o.total_amount\nFROM orders o\nINNER JOIN customers c ON o.customer_id = c.customer_id;", "scenario": "You need a report of orders that includes the customer's name, but only for orders that actually have a valid, matching customer record — any orphaned order rows with a broken customer_id reference should be excluded entirely. INNER JOIN does exactly this: it silently drops any order row that has no matching customer, giving you a clean, fully-matched result set.", "quiz": [{"q": "What rows does an INNER JOIN return?", "options": ["All rows from both tables regardless of a match", "Only rows where a match exists in both joined tables", "Only rows from the left table", "Only rows with NULL values"], "correct": 1, "explain": "INNER JOIN excludes any row from either side that lacks a matching row in the other table."}, {"q": "Why can mismatched data types on join columns hurt performance?", "options": ["It has no effect on performance", "It can prevent the optimizer from using indexes efficiently, forcing implicit type conversions", "It always causes a syntax error", "It only affects LEFT JOINs, not INNER JOINs"], "correct": 1, "explain": "Type mismatches often force the engine to convert values at query time, which can bypass index usage and slow execution."}]}, {"day": 15, "title": "Joins - LEFT JOIN", "summary": "LEFT JOIN returns all rows from the left table regardless of whether a match exists in the right table, filling in NULL for any right-table columns when there's no match. Since these NULLs often need to be handled gracefully in a report (showing '0' or 'No Data' instead of a blank), COALESCE or ISNULL are the standard tools to substitute a default value in place of a NULL.", "syntax": "SELECT c.customer_name, COALESCE(SUM(o.total_amount), 0) AS total_spent\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_name;", "scenario": "Marketing wants a complete list of every customer, including those who have never placed an order, alongside their total spend. A LEFT JOIN from customers to orders keeps every customer row even with zero matching orders, and wrapping the SUM in COALESCE(..., 0) turns the resulting NULL (from customers with no orders) into a clean, readable 0 instead of a blank cell.", "quiz": [{"q": "What happens to right-table columns in a LEFT JOIN when no matching row exists?", "options": ["The entire row is excluded from the result", "They are filled with NULL, while the left-table row is still included", "The query returns an error", "They default to 0 automatically without COALESCE"], "correct": 1, "explain": "LEFT JOIN preserves every left-table row and returns NULL for unmatched right-table columns — COALESCE is needed to replace that NULL with a default."}, {"q": "What does COALESCE(SUM(o.total_amount), 0) accomplish?", "options": ["It always returns 0 regardless of the sum", "It returns the SUM result, or 0 if the SUM is NULL (i.e., no matching orders)", "It deletes rows with a NULL sum", "It converts the sum to text"], "correct": 1, "explain": "COALESCE returns the first non-NULL argument, substituting 0 whenever the SUM would otherwise be NULL."}]}, {"day": 16, "title": "Joins - RIGHT & FULL JOIN", "summary": "RIGHT JOIN mirrors LEFT JOIN but keeps all rows from the right table instead, and FULL (OUTER) JOIN keeps all rows from both tables, matching where possible and filling NULLs where not. FULL OUTER JOIN is particularly valuable for data auditing — finding orphaned records on either side of a relationship, such as orders with no matching customer AND customers with no matching orders, in a single query.", "syntax": "SELECT c.customer_id, o.order_id\nFROM customers c\nFULL OUTER JOIN orders o ON c.customer_id = o.customer_id\nWHERE c.customer_id IS NULL OR o.order_id IS NULL;", "scenario": "A data quality audit needs to find every orphaned record: orders that reference a customer_id which no longer exists in the customers table, AND customers who somehow have no linked orders at all. A single FULL OUTER JOIN, filtered to rows where either side is NULL, surfaces both types of orphaned records in one query instead of running two separate LEFT/RIGHT JOIN queries.", "quiz": [{"q": "What distinguishes a FULL OUTER JOIN from an INNER JOIN?", "options": ["FULL OUTER JOIN returns fewer rows than INNER JOIN", "FULL OUTER JOIN keeps all rows from both tables, filling NULLs where no match exists, rather than only matched rows", "They produce identical results always", "FULL OUTER JOIN only works with numeric keys"], "correct": 1, "explain": "Unlike INNER JOIN's strict matching requirement, FULL OUTER JOIN preserves unmatched rows from both sides."}, {"q": "Why is FULL OUTER JOIN useful for data auditing?", "options": ["It automatically fixes data errors", "It can surface orphaned records on either side of a relationship in a single query", "It deletes mismatched rows permanently", "It only works on a single table"], "correct": 1, "explain": "Filtering a FULL OUTER JOIN for NULLs on either side reveals unmatched (orphaned) records from both tables at once."}]}, {"day": 17, "title": "Self Join", "summary": "A Self Join joins a table to itself, typically used to compare rows within the same table — the classic example being an employee table where each row references its own manager via a manager_id that points to another employee_id in the same table, revealing hierarchical relationships that a normal join between two different tables couldn't express.", "syntax": "SELECT e.employee_name AS employee, m.employee_name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.employee_id;", "scenario": "HR needs a report showing every employee alongside their manager's name, but both employees and managers live in the exact same employees table. A Self Join — aliasing the table twice, once as e for the employee and once as m for the manager — lets you join the table to itself on manager_id = employee_id, producing the paired employee-manager report.", "quiz": [{"q": "What is a Self Join used for?", "options": ["Joining a table to a completely different, unrelated table", "Joining a table to itself, typically to compare or relate rows within the same table", "Deleting duplicate rows", "Creating a new database"], "correct": 1, "explain": "Self Joins reference the same table twice (with different aliases) to relate rows to other rows in that same table."}, {"q": "In the employee-manager Self Join example, why must the table be aliased twice?", "options": ["Aliasing is optional and has no functional purpose here", "SQL needs two distinct references to the same table to distinguish the 'employee' role from the 'manager' role in the join", "It doubles the number of rows returned", "It is required only for LEFT JOIN, not other join types"], "correct": 1, "explain": "Since both sides of the join come from the same underlying table, aliases (e and m) are required to distinguish the two roles in the query."}]}, {"day": 18, "title": "Subqueries", "summary": "A subquery is a query nested inside another query, often used in the WHERE clause to filter based on the result of an inner calculation. Modern query optimizers now automatically flatten many subqueries into equivalent JOIN operations internally, meaning a well-optimized engine can execute a clearly-written subquery about as efficiently as a manually rewritten JOIN.", "syntax": "SELECT customer_name\nFROM customers\nWHERE customer_id IN (\n  SELECT customer_id FROM orders WHERE total_amount > 100000\n);", "scenario": "You need to find all customers who have placed at least one order over ৳100,000, but you don't need any order-level detail in the output — just the customer names. A subquery in the WHERE...IN clause first identifies the relevant customer_ids from the orders table, and the outer query then filters customers against that inner result, avoiding the row duplication a JOIN would otherwise introduce.", "quiz": [{"q": "What is a subquery?", "options": ["A query that runs after the main query finishes, in a separate transaction", "A query nested inside another query, often used to filter or supply values", "A backup copy of the database", "A type of index"], "correct": 1, "explain": "Subqueries are nested SELECT statements that provide intermediate results used by the outer query."}, {"q": "What do modern query optimizers often do with well-formed subqueries?", "options": ["Always execute them slower than a manual JOIN", "Automatically flatten them into an equivalent, efficient JOIN operation internally", "Reject them as invalid syntax", "Convert them into a stored procedure"], "correct": 1, "explain": "Modern optimizers frequently rewrite subqueries internally into JOINs, closing much of the historical performance gap."}]}, {"day": 19, "title": "Correlated Subqueries", "summary": "A correlated subquery references a column from the outer query, meaning it must be re-evaluated once for every row of the outer query, rather than being computed once independently. This row-by-row re-evaluation can be significantly slower on large datasets, so window functions are frequently a better-performing alternative when the goal is comparing each row to some aggregate within its own group.", "syntax": "-- Correlated subquery (re-evaluated per row)\nSELECT o.order_id, o.total_amount\nFROM orders o\nWHERE o.total_amount > (\n  SELECT AVG(o2.total_amount) FROM orders o2 WHERE o2.customer_id = o.customer_id\n);\n\n-- Equivalent, often faster window function version\nSELECT order_id, total_amount FROM (\n  SELECT order_id, total_amount,\n         AVG(total_amount) OVER (PARTITION BY customer_id) AS cust_avg\n  FROM orders\n) t WHERE total_amount > cust_avg;", "scenario": "You want to find every order that's above that specific customer's own average order size — not the overall average across all customers. A correlated subquery recalculates each customer's average on every single outer row, which can crawl on millions of rows; rewriting the same logic with a window function (AVG(...) OVER (PARTITION BY customer_id)) computes all customer averages in a single pass, often dramatically faster.", "quiz": [{"q": "What makes a subquery 'correlated'?", "options": ["It runs completely independently of the outer query", "It references a column from the outer query, requiring re-evaluation for each outer row", "It always returns multiple columns", "It can only be used in the SELECT clause"], "correct": 1, "explain": "The defining trait of a correlated subquery is its dependency on the outer query's current row, forcing repeated evaluation."}, {"q": "Why are window functions often recommended as an alternative to correlated subqueries?", "options": ["They cannot compute averages", "They typically compute grouped aggregates in a single pass rather than re-evaluating per row, improving performance", "They eliminate the need for a SELECT statement", "They only work with two-column tables"], "correct": 1, "explain": "Window functions like AVG() OVER (PARTITION BY ...) compute per-group aggregates efficiently in one pass, avoiding the row-by-row cost of correlated subqueries."}]}, {"day": 20, "title": "IN, NOT IN, BETWEEN, LIKE", "summary": "IN checks membership in a list of values, BETWEEN checks a range, and LIKE performs wildcard text matching. A critical, frequently-tested pitfall is that NOT IN silently returns zero rows for the entire query if the subquery list contains even a single NULL value — NOT EXISTS is the safer alternative because it doesn't share this NULL-handling trap.", "syntax": "SELECT * FROM products WHERE category IN ('Electronics','Apparel');\nSELECT * FROM products WHERE price BETWEEN 500 AND 2000;\nSELECT * FROM customers WHERE customer_name LIKE 'Rah%';\n\n-- Risky:\nSELECT * FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders);\n-- Safer:\nSELECT * FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id);", "scenario": "An analyst uses NOT IN to find customers with no orders, but the orders.customer_id subquery happens to contain one NULL value (from a data entry error) — and the entire NOT IN query silently returns zero rows, hiding real customers who genuinely have no orders. Switching to NOT EXISTS avoids this NULL trap entirely and returns the correct result.", "quiz": [{"q": "What dangerous behavior can occur when using NOT IN with a subquery that contains a NULL value?", "options": ["The query throws a clear error immediately", "The entire query can silently return zero rows, even though correct results exist", "NULL values are automatically ignored with no side effects", "NOT IN cannot be used with subqueries at all"], "correct": 1, "explain": "Because NULL comparisons are neither true nor false, a single NULL in the NOT IN list can invalidate the entire condition, silently returning no rows."}, {"q": "What is the safer alternative to NOT IN when checking for non-matching rows via a subquery?", "options": ["BETWEEN", "NOT EXISTS", "LIKE", "GROUP BY"], "correct": 1, "explain": "NOT EXISTS evaluates row existence directly and isn't vulnerable to the NULL-in-subquery pitfall that affects NOT IN."}]}, {"day": 21, "title": "CASE Statement", "summary": "CASE lets you embed conditional, if-then-else-style logic directly inside a SQL query, commonly used to bucket continuous values into categories or apply custom scoring logic inline — for example, converting a raw sales figure into a 'High/Medium/Low' performance tier without needing a separate lookup table.", "syntax": "SELECT customer_name, total_spent,\n  CASE\n    WHEN total_spent > 500000 THEN 'VIP'\n    WHEN total_spent > 100000 THEN 'Gold'\n    ELSE 'Standard'\n  END AS customer_tier\nFROM customers;", "scenario": "Marketing wants every customer tagged as VIP, Gold, or Standard based on lifetime spend, directly inside the query output — not as a separate manual classification step. A CASE statement with WHEN...THEN branches assigns the correct tier label inline, so the categorization logic lives in one auditable place and updates automatically as spend figures change.", "quiz": [{"q": "What is the primary use of a CASE statement in SQL?", "options": ["To join two tables together", "To embed conditional, if-then-else logic directly inside a query", "To sort a result set", "To create a new table"], "correct": 1, "explain": "CASE provides inline conditional branching, evaluated per row, similar to IF/ELSE logic in other languages."}, {"q": "In the customer tier CASE example, what tier would a customer with total_spent of 150000 receive?", "options": ["VIP", "Gold", "Standard", "No tier assigned"], "correct": 1, "explain": "150000 is not greater than 500000 (so not VIP) but is greater than 100000, matching the second WHEN condition for 'Gold'."}]}, {"day": 22, "title": "NULL Values", "summary": "NULL represents an unknown or missing value, and SQL uses three-valued logic (TRUE, FALSE, and UNKNOWN) rather than simple binary logic to handle it correctly. Modern database engines provide precise built-in functions for handling NULLs in aggregate and comparison contexts, but understanding that any operation involving NULL typically also produces NULL (or UNKNOWN) remains the essential mental model.", "syntax": "SELECT customer_name, phone,\n  ISNULL(phone, 'Not Provided') AS phone_display   -- SQL Server\nFROM customers;\n\n-- Standard SQL equivalent\nSELECT COALESCE(phone, 'Not Provided') AS phone_display FROM customers;", "scenario": "A customer contact report needs to display 'Not Provided' instead of a blank cell whenever a phone number is missing. Wrapping the phone column in COALESCE(phone, 'Not Provided') substitutes a readable default the moment the underlying value is NULL, without altering the actual stored data in the customers table.", "quiz": [{"q": "What does SQL's three-valued logic consist of?", "options": ["TRUE, FALSE, and MAYBE", "TRUE, FALSE, and UNKNOWN", "YES, NO, and NULL", "0, 1, and -1"], "correct": 1, "explain": "SQL formally recognizes TRUE, FALSE, and UNKNOWN (arising from NULL comparisons) as its three logical states."}, {"q": "What is the standard SQL function (portable across most databases) for substituting a default value in place of NULL?", "options": ["ISNULL (SQL Server-specific)", "COALESCE", "NVL (Oracle-specific)", "IFNULL (MySQL-specific)"], "correct": 1, "explain": "COALESCE is the ANSI standard function supported broadly across database platforms for NULL substitution."}]}, {"day": 23, "title": "Window Functions (ROW_NUMBER, RANK, DENSE_RANK)", "summary": "Window functions calculate a value across a set of rows related to the current row — without collapsing those rows into a single output row the way GROUP BY does. ROW_NUMBER assigns a unique sequential number, RANK leaves gaps after ties, and DENSE_RANK doesn't; these are essential for running totals, moving averages, and 'top N per group' analysis, making them one of an analyst's most valuable tools.", "syntax": "SELECT customer_id, order_date, total_amount,\n  ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn,\n  RANK() OVER (ORDER BY total_amount DESC) AS sales_rank,\n  SUM(total_amount) OVER (ORDER BY order_date) AS running_total\nFROM orders;", "scenario": "You need each customer's single most recent order, out of a table with thousands of customers and millions of order rows. ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) numbers each customer's orders from most recent (1) onward, and filtering the outer query to rn = 1 returns exactly one row per customer — their latest order — without a single GROUP BY.", "quiz": [{"q": "What is the key difference between window functions and GROUP BY aggregation?", "options": ["Window functions always run slower", "Window functions calculate values across related rows without collapsing them into a single output row, unlike GROUP BY", "GROUP BY can only be used with COUNT", "They are functionally identical"], "correct": 1, "explain": "Window functions preserve the original row-level granularity while still computing aggregate-style calculations across a defined 'window' of rows."}, {"q": "What is the difference between RANK() and DENSE_RANK() when there is a tie?", "options": ["They behave identically in every case", "RANK() leaves a gap in numbering after a tie; DENSE_RANK() does not", "DENSE_RANK() cannot handle ties", "RANK() ignores ties entirely"], "correct": 1, "explain": "After a tie, RANK() skips the next rank number(s) equal to the number of tied rows, while DENSE_RANK() continues sequentially with no gap."}]}, {"day": 24, "title": "CTE (Common Table Expression)", "summary": "A Common Table Expression (CTE), defined with WITH, creates a named, temporary result set that can be referenced within the main query — making complex, multi-step logic far more readable than deeply nested subqueries. Recursive CTEs extend this further, letting you process hierarchical or chain-like data (such as an organizational reporting structure or a bill-of-materials tree) that a plain query structurally cannot express.", "syntax": "WITH regional_sales AS (\n  SELECT region, SUM(total_amount) AS revenue\n  FROM orders GROUP BY region\n)\nSELECT region, revenue\nFROM regional_sales\nWHERE revenue > 1000000;\n\n-- Recursive CTE (org hierarchy)\nWITH RECURSIVE org_chain AS (\n  SELECT employee_id, manager_id, 1 AS level FROM employees WHERE manager_id IS NULL\n  UNION ALL\n  SELECT e.employee_id, e.manager_id, oc.level + 1\n  FROM employees e JOIN org_chain oc ON e.manager_id = oc.employee_id\n)\nSELECT * FROM org_chain;", "scenario": "You need to trace the full management chain above every employee in a 2,000-person organization, an arbitrary number of levels deep. A standard JOIN can only traverse one level of the manager_id relationship at a time. A Recursive CTE starts from the top of the hierarchy and repeatedly joins back to itself, walking down (or up) the chain until it exhausts all levels — something no non-recursive query can express.", "quiz": [{"q": "What is the primary benefit of using a CTE over a deeply nested subquery?", "options": ["CTEs run in a completely separate database", "CTEs break complex logic into named, readable steps that the main query can reference", "CTEs automatically create indexes", "CTEs eliminate the need for JOIN"], "correct": 1, "explain": "By naming intermediate result sets, CTEs make multi-step logic dramatically easier to read and maintain than nested subqueries."}, {"q": "What kind of data structure is a Recursive CTE specifically designed to handle?", "options": ["Flat, single-table lists only", "Hierarchical or chain-like data, such as organizational reporting structures", "Only date-based ranges", "Binary data types"], "correct": 1, "explain": "Recursive CTEs repeatedly reference themselves to walk through hierarchical relationships of arbitrary depth."}]}, {"day": 25, "title": "UNION, UNION ALL", "summary": "UNION combines the result sets of two or more SELECT queries into one, automatically removing duplicate rows in the process, while UNION ALL performs the same combination but keeps every row, including duplicates. Because duplicate-checking has a real computational cost, UNION ALL executes noticeably faster and should always be preferred unless removing duplicates is specifically required.", "syntax": "SELECT customer_id, 'Online' AS channel FROM online_orders\nUNION ALL\nSELECT customer_id, 'Retail' AS channel FROM retail_orders;\n\n-- Only if duplicates truly need removing:\nSELECT product_id FROM warehouse_a\nUNION\nSELECT product_id FROM warehouse_b;", "scenario": "You're combining online and retail order tables into one unified feed for a Power BI report, and you know a customer_id can legitimately appear in both channels — that's not a duplicate to be removed, it's meaningful data. Using UNION ALL preserves every row from both tables as-is; using plain UNION would incorrectly collapse two genuinely separate transactions that happen to share the same customer_id and channel label.", "quiz": [{"q": "What is the key functional difference between UNION and UNION ALL?", "options": ["UNION ALL removes duplicates; UNION keeps them", "UNION removes duplicate rows from the combined result; UNION ALL keeps every row including duplicates", "They produce different column counts", "UNION ALL can only combine two queries maximum"], "correct": 1, "explain": "UNION performs an implicit duplicate-removal step across the combined result set; UNION ALL skips that step entirely."}, {"q": "Why is UNION ALL generally preferred over UNION when duplicates aren't a concern?", "options": ["UNION ALL is not valid SQL syntax", "UNION ALL avoids the computational cost of checking for and removing duplicates, making it faster", "UNION ALL sorts the data automatically", "There is no performance difference between them"], "correct": 1, "explain": "Skipping the duplicate-detection step gives UNION ALL a meaningful performance advantage on large result sets."}]}, {"day": 26, "title": "Data Modification (INSERT, UPDATE, DELETE) & JSON Native Parsing", "summary": "INSERT adds new rows, UPDATE modifies existing rows, and DELETE removes rows — the three core data modification statements, all of which should generally be tested inside a transaction before committing to production data. Modern data modification also supports passing JSON objects directly into UPDATE statements, letting you patch a specific nested field inside a JSON column without rewriting the entire JSON blob.", "syntax": "INSERT INTO customers (customer_id, customer_name) VALUES (501, 'Karim Traders');\nUPDATE orders SET status = 'Shipped' WHERE order_id = 10432;\nDELETE FROM orders WHERE order_date < '2020-01-01';\n\n-- Native JSON node update\nUPDATE orders\nSET metadata = JSON_MODIFY(metadata, '$.shipping_method', 'Express')\nWHERE order_id = 10432;", "scenario": "An order's metadata JSON field stores ten different sub-values, but you only need to change the shipping_method field for one order — overwriting the entire JSON blob risks accidentally erasing the other nine fields if done manually. JSON_MODIFY(metadata, '$.shipping_method', 'Express') surgically updates just that one nested field, leaving everything else in the JSON object untouched.", "quiz": [{"q": "Which statement is used to remove existing rows from a table?", "options": ["DROP", "DELETE", "REMOVE", "TRUNCATE only"], "correct": 1, "explain": "DELETE removes rows matching a WHERE condition (DROP removes the entire table object, not rows)."}, {"q": "What does a function like JSON_MODIFY allow you to do that a full column overwrite doesn't?", "options": ["Delete the entire JSON column", "Update a single nested field within a JSON object without affecting the rest of its structure", "Convert JSON to plain text permanently", "Create a new table automatically"], "correct": 1, "explain": "Native JSON modification functions let you patch one specific node inside a JSON value, preserving all other fields."}]}, {"day": 27, "title": "Views & Event Streaming", "summary": "A View is a saved, reusable SELECT query that behaves like a virtual table, simplifying repeated complex logic for end users. Beyond static views, modern architectures increasingly rely on Change Event Streaming and Materialized Views for real-time, event-driven applications — where a Materialized View physically stores its result and refreshes incrementally as underlying data changes, rather than recalculating from scratch on every query.", "syntax": "CREATE VIEW regional_summary AS\nSELECT region, SUM(total_amount) AS revenue\nFROM orders GROUP BY region;\n\nSELECT * FROM regional_summary WHERE revenue > 500000;\n\n-- Materialized View (stores physical results, refreshed incrementally)\nCREATE MATERIALIZED VIEW mv_regional_summary AS\nSELECT region, SUM(total_amount) AS revenue FROM orders GROUP BY region;", "scenario": "Your BI team runs the same complex 6-table regional-summary query dozens of times a day across different dashboards, and recalculating it from scratch every single time is expensive at scale. A Materialized View computes and physically stores the result once, then refreshes incrementally as new orders arrive — dashboards querying it get near-instant results instead of re-running the full join-and-aggregate logic each time.", "quiz": [{"q": "What is a standard (non-materialized) View in SQL?", "options": ["A physical copy of a table's data", "A saved, reusable SELECT query that behaves like a virtual table", "A type of index", "A backup mechanism"], "correct": 1, "explain": "A standard View doesn't store data itself — it re-runs its underlying query each time it's referenced."}, {"q": "How does a Materialized View differ from a standard View?", "options": ["It cannot be queried with SELECT", "It physically stores its result set and refreshes incrementally, rather than recalculating on every query", "It only works with a single table, never a JOIN", "It is identical to a standard View in every respect"], "correct": 1, "explain": "Materialized Views trade storage space for query speed by persisting computed results rather than recalculating them live."}]}, {"day": 28, "title": "Indexes Basics", "summary": "Indexes are special lookup structures that dramatically speed up data retrieval on large tables, at the cost of some additional storage and slightly slower writes (since the index must also be updated). Historically, indexes could become fragmented over time and required manual maintenance, but modern engines' Adaptive Tuning now automatically manages much of this fragmentation in the background, reducing the manual indexing workload for DBAs and analysts alike.", "syntax": "CREATE INDEX idx_customer_region ON customers(region);\nCREATE UNIQUE INDEX idx_email ON customers(email);\n-- Composite index (order matters)\nCREATE INDEX idx_orders_cust_date ON orders(customer_id, order_date);", "scenario": "A dashboard query that filters orders by both customer_id and order_date together runs slowly on a 100-million-row table. Instead of two separate single-column indexes, a composite index on (customer_id, order_date) — matching the exact filter pattern of the query — lets the optimizer satisfy both conditions using one efficient index lookup, rather than combining two separate index scans.", "quiz": [{"q": "What is the main trade-off of adding an index to a table?", "options": ["Indexes have no downsides at all", "Faster reads, at the cost of additional storage and slightly slower write operations", "Indexes make SELECT queries slower", "Indexes remove the need for a primary key"], "correct": 1, "explain": "Every index must be maintained as data changes, so writes become marginally slower even as targeted reads become much faster."}, {"q": "What does the 2026 Adaptive Tuning capability in modern database engines reduce the need for?", "options": ["Writing SELECT statements", "Manual index fragmentation maintenance", "Creating tables", "Using JOINs"], "correct": 1, "explain": "Adaptive Tuning automatically manages much of the index fragmentation that previously required manual DBA intervention."}]}, {"day": 29, "title": "SQL Project - Data Analysis", "summary": "This project day combines raw JSON data arriving from an API or pipeline with traditional relational tables in a single analysis, joining structured JSON fields (extracted via native JSON functions) against conventional table columns to answer a real business question — a common pattern as more source systems deliver semi-structured data alongside classic relational data.", "syntax": "SELECT o.order_id, o.metadata->>'$.shipping_method' AS shipping_method,\n       c.customer_name, o.total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nWHERE o.metadata->>'$.priority' = 'High';", "scenario": "A logistics API feeds raw JSON shipment metadata directly into your orders table, but your customer relationship data lives in a separate, conventional customers table. To find every high-priority shipment along with the customer's name, you extract the priority field from the JSON metadata directly in the WHERE clause, then JOIN it to the traditional customers table in the same query — blending both data shapes seamlessly.", "quiz": [{"q": "What real-world data pattern does this project specifically practice combining?", "options": ["Two identical relational tables only", "Semi-structured JSON fields alongside traditional relational table columns", "Only image data", "Only text files with no structure"], "correct": 1, "explain": "The project blends native JSON field extraction with conventional table joins — a common modern data-analysis pattern."}, {"q": "What operator/syntax is used in the example query to extract a value from a JSON column?", "options": ["->> (or equivalent JSON path extraction syntax)", "VLOOKUP", "GROUP BY", "UNION"], "correct": 0, "explain": "The ->> operator (or an equivalent JSON_VALUE/JSON path function depending on the engine) extracts a specific field from a JSON column."}]}, {"day": 30, "title": "SQL Project - Final Dashboard Queries", "summary": "The capstone SQL project focuses on producing optimized, window-function-rich queries specifically designed to feed a BI tool like Power BI — meaning the query itself should already return clean, aggregated, well-aliased data ready for visualization, rather than raw transactional rows that the BI layer would need to further process.", "syntax": "WITH monthly_sales AS (\n  SELECT DATE_TRUNC('month', order_date) AS month, region,\n         SUM(total_amount) AS revenue\n  FROM orders GROUP BY DATE_TRUNC('month', order_date), region\n)\nSELECT month, region, revenue,\n  SUM(revenue) OVER (PARTITION BY region ORDER BY month) AS running_total\nFROM monthly_sales\nORDER BY region, month;", "scenario": "Your final deliverable is a single query that Power BI will connect to directly as its data source — it needs to already provide monthly revenue by region, plus a running cumulative total per region, so the report loads fast and requires minimal transformation inside Power BI itself. Combining a CTE for the monthly aggregation with a window function for the running total produces exactly this BI-ready output in one well-structured query.", "quiz": [{"q": "What is the primary goal when writing a SQL query specifically intended to feed a BI dashboard?", "options": ["Return the maximum possible number of raw columns", "Return clean, already-aggregated, well-aliased data that requires minimal further processing in the BI tool", "Avoid using any window functions", "Always return every row from every source table"], "correct": 1, "explain": "BI-ready queries aim to shift as much aggregation and cleaning logic as possible into SQL, so the reporting layer loads fast and simply."}, {"q": "In the final example query, what does the window function SUM(revenue) OVER (PARTITION BY region ORDER BY month) calculate?", "options": ["A single grand total across all regions and months", "A running cumulative revenue total per region, ordered by month", "The average revenue per month", "The count of orders per region"], "correct": 1, "explain": "PARTITION BY region resets the running total independently for each region, while ORDER BY month accumulates it chronologically within that partition."}]}];
+
+let currentDayIndex = null;
+
+function getCompleted(dayNum) {
+  try { return localStorage.getItem(STORAGE_PREFIX + dayNum) === "true"; } catch(e) { return false; }
+}
+function setCompleted(dayNum, val) {
+  try { localStorage.setItem(STORAGE_PREFIX + dayNum, val ? "true" : "false"); } catch(e) {}
+}
+function getQuizStat() {
+  try {
+    const c = parseInt(localStorage.getItem(STORAGE_PREFIX + "quiz_correct") || "0");
+    const t = parseInt(localStorage.getItem(STORAGE_PREFIX + "quiz_total") || "0");
+    return {c,t};
+  } catch(e) { return {c:0,t:0}; }
+}
+function recordQuizAnswer(isCorrect) {
+  try {
+    const s = getQuizStat();
+    localStorage.setItem(STORAGE_PREFIX + "quiz_total", String(s.t + 1));
+    localStorage.setItem(STORAGE_PREFIX + "quiz_correct", String(s.c + (isCorrect?1:0)));
+  } catch(e) {}
+}
+
+function computeStreak() {
+  let streak = 0;
+  for (let i = 0; i < DAYS.length; i++) {
+    if (getCompleted(DAYS[i].day + DAY_OFFSET)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function renderProgress() {
+  const total = DAYS.length;
+  let done = 0;
+  DAYS.forEach(d => { if (getCompleted(d.day + DAY_OFFSET)) done++; });
+  const pct = Math.round((done/total)*100);
+  document.getElementById('progressCount').textContent = done;
+  document.getElementById('progressFill').style.width = pct + "%";
+  document.getElementById('statPct').textContent = pct + "%";
+  document.getElementById('statStreak').textContent = computeStreak();
+  const qs = getQuizStat();
+  document.getElementById('statQuiz').textContent = qs.t > 0 ? Math.round((qs.c/qs.t)*100) + "%" : "\u2014";
+}
+
+function renderGrid() {
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = "";
+  DAYS.forEach((d, idx) => {
+    const globalDay = d.day + DAY_OFFSET;
+    const done = getCompleted(globalDay);
+    const card = document.createElement('button');
+    card.className = "day-card rounded-xl p-3 sm:p-4 text-left" + (done ? " completed" : "");
+    card.setAttribute('aria-label', 'Day ' + globalDay + ': ' + d.title);
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-2">
+        <span class="cell-ref">DAY ${globalDay}</span>
+        ${done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="accent-text"><path d="M20 6L9 17l-5-5"/></svg>' : '<span class="w-4 h-4 rounded-full border border-white/15 inline-block"></span>'}
+      </div>
+      <p class="font-display font-semibold text-xs sm:text-sm leading-snug line-clamp-3">${d.title}</p>
+    `;
+    card.addEventListener('click', () => openLesson(idx));
+    grid.appendChild(card);
+  });
+}
+
+function openLesson(idx) {
+  currentDayIndex = idx;
+  const d = DAYS[idx];
+  const globalDay = d.day + DAY_OFFSET;
+  document.getElementById('dashboardView').classList.add('hidden');
+  document.getElementById('lessonView').classList.remove('hidden');
+  document.getElementById('lessonDayLabel').textContent = "DAY " + globalDay + " OF 90";
+  document.getElementById('lessonTitle').textContent = d.title;
+  document.getElementById('lessonSummary').textContent = d.summary;
+  document.getElementById('lessonSyntax').textContent = d.syntax;
+  document.getElementById('lessonScenario').textContent = d.scenario;
+  const cb = document.getElementById('completeCheckbox');
+  cb.checked = getCompleted(globalDay);
+  cb.onchange = () => { setCompleted(globalDay, cb.checked); renderProgress(); };
+  renderQuiz(d.quiz, globalDay);
+  document.getElementById('prevDayBtn').disabled = idx === 0;
+  document.getElementById('nextDayBtn').disabled = idx === DAYS.length - 1;
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+function renderQuiz(quiz, globalDay) {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const qBlock = document.createElement('div');
+    qBlock.className = "pb-5" + (qi < quiz.length - 1 ? " border-b border-white/5" : "");
+    const qTitle = document.createElement('p');
+    qTitle.className = "font-medium text-sm sm:text-base mb-3";
+    qTitle.textContent = (qi+1) + ". " + q.q;
+    qBlock.appendChild(qTitle);
+    const optsWrap = document.createElement('div');
+    optsWrap.className = "space-y-2";
+    const explainBox = document.createElement('div');
+    explainBox.className = "hidden mt-3 text-xs sm:text-sm text-slate-400 glass rounded-lg p-3";
+    q.options.forEach((opt, oi) => {
+      const optEl = document.createElement('div');
+      optEl.className = "quiz-option border border-white/10 rounded-lg p-3 sm:p-4 text-xs sm:text-sm";
+      optEl.textContent = opt;
+      optEl.addEventListener('click', () => {
+        if (optsWrap.dataset.answered === "true") return;
+        optsWrap.dataset.answered = "true";
+        optsWrap.querySelectorAll('.quiz-option').forEach(el => el.classList.add('locked'));
+        const isCorrect = oi === q.correct;
+        optEl.classList.add(isCorrect ? 'quiz-correct' : 'quiz-incorrect');
+        if (!isCorrect) {
+          optsWrap.children[q.correct].classList.add('quiz-correct');
+        }
+        explainBox.classList.remove('hidden');
+        explainBox.textContent = q.explain;
+        recordQuizAnswer(isCorrect);
+        renderProgress();
+      });
+      optsWrap.appendChild(optEl);
+    });
+    qBlock.appendChild(optsWrap);
+    qBlock.appendChild(explainBox);
+    container.appendChild(qBlock);
+  });
+}
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  document.getElementById('lessonView').classList.add('hidden');
+  document.getElementById('dashboardView').classList.remove('hidden');
+  renderGrid();
+  renderProgress();
+  window.scrollTo({top:0, behavior:'instant'});
+});
+
+document.getElementById('prevDayBtn').addEventListener('click', () => {
+  if (currentDayIndex > 0) openLesson(currentDayIndex - 1);
+});
+document.getElementById('nextDayBtn').addEventListener('click', () => {
+  if (currentDayIndex < DAYS.length - 1) openLesson(currentDayIndex + 1);
+});
+
+document.getElementById('navBtn').addEventListener('click', () => {
+  document.getElementById('mobileNav').classList.toggle('hidden');
+});
+
+renderGrid();
+renderProgress();
+</script>
+</body>
+</html>

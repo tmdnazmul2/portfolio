@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Excel Track — 90 Days Data Analyst Challenge (2026)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #10b981;
+    --accent-dim: #065f46;
+    --accent-rgb: 16,185,129;
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #0a0e14;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(var(--accent-rgb),0.08), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(var(--accent-rgb),0.05), transparent 45%);
+    font-family: 'Inter', sans-serif;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+  .accent-text { color: var(--accent); }
+  .accent-bg { background-color: var(--accent); }
+  .accent-border { border-color: var(--accent); }
+  ::selection { background: rgba(var(--accent-rgb),0.35); }
+  .glass {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+  }
+  .day-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: all 0.18s ease;
+  }
+  .day-card:hover {
+    border-color: rgba(var(--accent-rgb),0.6);
+    background: rgba(var(--accent-rgb),0.06);
+    transform: translateY(-2px);
+  }
+  .day-card.completed {
+    border-color: rgba(var(--accent-rgb),0.45);
+    background: rgba(var(--accent-rgb),0.05);
+  }
+  .progress-track {
+    background: rgba(255,255,255,0.06);
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    transition: width 0.6s cubic-bezier(.16,1,.3,1);
+  }
+  .quiz-option {
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  .quiz-option:hover:not(.locked) {
+    border-color: rgba(var(--accent-rgb),0.5);
+    background: rgba(var(--accent-rgb),0.06);
+  }
+  .quiz-correct {
+    border-color: #10b981 !important;
+    background: rgba(16,185,129,0.14) !important;
+    color: #6ee7b7;
+  }
+  .quiz-incorrect {
+    border-color: #ef4444 !important;
+    background: rgba(239,68,68,0.14) !important;
+    color: #fca5a5;
+  }
+  .code-box {
+    background: #050709;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .fade-in { animation: fadeIn 0.35s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform:translateY(0);} }
+  .scanline {
+    background: repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(var(--accent-rgb),0.4); }
+  .cell-ref {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.35);
+  }
+  .grid-overlay {
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+  button:focus-visible, [tabindex]:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div class="grid-overlay fixed inset-0 pointer-events-none opacity-40"></div>
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-40 glass">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-lg flex items-center justify-center font-display font-bold text-lg shrink-0" style="background: rgba(var(--accent-rgb),0.15); color: var(--accent); border:1px solid rgba(var(--accent-rgb),0.35);">
+        &#8862;
+      </div>
+      <div class="min-w-0">
+        <p class="cell-ref uppercase">PHASE 01 · DAYS 1\u201330</p>
+        <h1 class="font-display font-bold text-lg sm:text-xl truncate">Excel Track</h1>
+      </div>
+    </div>
+    <div class="hidden md:flex items-center gap-2 font-mono text-xs">
+      <a href="sql-challenge.html" class="glass px-3 py-2 rounded-lg hover:text-white text-slate-400 transition-colors">SQL Track — Days 31–60</a>
+<a href="powerbi-challenge.html" class="glass px-3 py-2 rounded-lg hover:text-white text-slate-400 transition-colors">Power BI Track — Days 61–90</a>
+    </div>
+    <button id="navBtn" class="md:hidden p-2 rounded-lg glass" aria-label="Other tracks">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="mobileNav" class="hidden md:hidden glass border-t border-white/5 px-4 py-3 flex flex-col gap-2 font-mono text-xs">
+    <a href="sql-challenge.html" class="glass px-3 py-2 rounded-lg text-slate-300">SQL Track — Days 31–60</a>
+<a href="powerbi-challenge.html" class="glass px-3 py-2 rounded-lg text-slate-300">Power BI Track — Days 61–90</a>
+  </div>
+</header>
+
+<!-- ============ DASHBOARD VIEW ============ -->
+<main id="dashboardView" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+  <section class="mb-10 sm:mb-14 fade-in">
+    <p class="cell-ref uppercase mb-2">=SUM(EFFORT1:EFFORT30) &rarr; MASTERY</p>
+    <h2 class="font-display font-bold text-3xl sm:text-5xl leading-tight mb-3">
+      Thirty days to turn raw rows<br class="hidden sm:block"> <span class="accent-text">into board-ready dashboards.</span>
+    </h2>
+    <p class="text-slate-400 max-w-2xl text-sm sm:text-base">From XLOOKUP to Python-in-Excel: build the exact spreadsheet muscle memory that senior analysts use every single day, one module at a time.</p>
+  </section>
+
+  <!-- Progress tracker -->
+  <section class="glass rounded-2xl p-5 sm:p-7 mb-10 sm:mb-14 fade-in">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
+      <div>
+        <p class="cell-ref uppercase mb-1">Excel Progress Tracker</p>
+        <p class="font-display font-bold text-2xl sm:text-3xl">
+          <span id="progressCount" class="accent-text">0</span><span class="text-slate-500">/30 days completed</span>
+        </p>
+      </div>
+      <div class="flex gap-6 font-mono text-xs text-slate-400">
+        <div><span class="block text-slate-200 font-semibold text-base" id="statPct">0%</span>mastery</div>
+        <div><span class="block text-slate-200 font-semibold text-base" id="statStreak">0</span>current streak</div>
+        <div><span class="block text-slate-200 font-semibold text-base" id="statQuiz">0%</span>quiz accuracy</div>
+      </div>
+    </div>
+    <div class="progress-track h-3 rounded-full overflow-hidden">
+      <div id="progressFill" class="progress-fill h-full rounded-full" style="width:0%"></div>
+    </div>
+  </section>
+
+  <!-- Day grid -->
+  <section class="fade-in">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-display font-semibold text-lg sm:text-xl">30-Day Module Grid</h3>
+      <p class="cell-ref uppercase hidden sm:block">CLICK A MODULE TO BEGIN</p>
+    </div>
+    <div id="dayGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"></div>
+  </section>
+
+</main>
+
+<!-- ============ LESSON VIEW ============ -->
+<main id="lessonView" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+  <button id="backBtn" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 p-2 -ml-2 rounded-lg transition-colors">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    Back to all days
+  </button>
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <p class="cell-ref uppercase mb-1" id="lessonDayLabel"></p>
+      <h2 id="lessonTitle" class="font-display font-bold text-2xl sm:text-4xl"></h2>
+    </div>
+    <label class="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer select-none shrink-0">
+      <input type="checkbox" id="completeCheckbox" class="w-5 h-5 rounded accent-current" style="accent-color: var(--accent);">
+      <span class="font-mono text-sm">Mark as Completed</span>
+    </label>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <!-- Left pane -->
+    <div class="space-y-6">
+      <div class="glass rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-3">TECHNICAL SUMMARY</p>
+        <p id="lessonSummary" class="text-slate-300 leading-relaxed text-sm sm:text-base"></p>
+      </div>
+      <div class="code-box rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full accent-bg inline-block"></span>SYNTAX / FORMULA REFERENCE
+        </p>
+        <pre id="lessonSyntax" class="font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto whitespace-pre-wrap accent-text"></pre>
+      </div>
+    </div>
+
+    <!-- Right pane -->
+    <div class="space-y-6">
+      <div class="glass rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-3">CORPORATE SCENARIO</p>
+        <p id="lessonScenario" class="text-slate-300 leading-relaxed text-sm sm:text-base"></p>
+      </div>
+      <div class="glass rounded-2xl p-5 sm:p-6">
+        <p class="cell-ref uppercase mb-4">CONCEPTUAL CHECK</p>
+        <div id="quizContainer" class="space-y-6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
+    <button id="prevDayBtn" class="glass px-4 py-3 rounded-xl font-mono text-xs sm:text-sm flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg> Prev
+    </button>
+    <button id="nextDayBtn" class="accent-bg text-black font-semibold px-4 py-3 rounded-xl font-mono text-xs sm:text-sm flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed">
+      Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
+  <p class="cell-ref uppercase">90 DAYS DATA ANALYST CHALLENGE · 2026 EDITION · Excel MODULE</p>
+</footer>
+
+<script>
+const STORAGE_PREFIX = "excel_day_";
+const DAY_OFFSET = 1 - 1;
+const DAYS = [{"day": 1, "title": "Excel Interface & Basics", "summary": "The 2026 Excel interface centers on the Ribbon, the Name Box, and the Formula Bar, but the standout addition this year is True Dark Mode, which now recolors the worksheet grid itself instead of only the chrome around it. Pair that with the Focus Cell trick — a setting that dims every row and column except the one your active cell sits in — and you get a distraction-free canvas for fast data entry. Understanding workbook structure (Workbooks > Sheets > Ranges > Cells) is the foundation every later lesson builds on.", "syntax": "Ctrl+Home              → jump to A1\nCtrl+Arrow Key          → jump to edge of data region\nAlt+H, H                → open fill color picker\nView tab → Sheet View → Focus Cell (2026)", "scenario": "You've just joined the FP&A team at a mid-size garment exporter in Dhaka. Your manager hands you a 40-column raw shipment ledger and asks you to 'just get oriented.' Before touching a single formula, you enable Dark Mode and Focus Cell so you can trace a single shipment row across 40 columns without losing your place — a habit senior analysts use every day.", "quiz": [{"q": "What does the 2026 'Focus Cell' feature actually do?", "options": ["Locks the cell so it can't be edited", "Highlights the active row and column while dimming the rest of the sheet", "Automatically formats the cell based on its data type", "Freezes panes around the selected cell"], "correct": 1, "explain": "Focus Cell is a visual aid, not a protection or formatting feature — it dims everything outside the active row/column intersection."}, {"q": "Which shortcut moves you instantly to cell A1 from anywhere in the sheet?", "options": ["Ctrl+Home", "Ctrl+A", "F5", "Ctrl+1"], "correct": 0, "explain": "Ctrl+Home always returns to A1 (or the top-left of a frozen pane); Ctrl+A selects all data instead."}]}, {"day": 2, "title": "Data Types & Formatting", "summary": "Excel now supports Rich Data Types like Stocks and Geography, which store a structured object behind a cell rather than plain text. When a cell holds a Rich Data Type, a small Value Token Icon appears in the Formula Bar, letting you instantly distinguish a linked, refreshable object (like a live stock price) from ordinary typed text. Knowing this distinction matters because Rich Data Types expose sub-fields you can extract with dot-notation style field references, unlike static text or numbers.", "syntax": "=A2.Price                 (extract a field from a Rich Data Type)\n=A2.\"52 Week High\"\nNumber Format codes: #,##0.00 ; \"৳\"#,##0 ; 0.0%", "scenario": "Your company's treasury dashboard tracks the USD/BDT exchange rate for import invoicing. Instead of manually refreshing a rate you copy-paste from a website, you insert a Currencies Rich Data Type in a cell, and pull the live rate into your landed-cost formula using field extraction — eliminating a daily manual task.", "quiz": [{"q": "How can you visually tell a cell contains a Rich Data Type instead of plain text?", "options": ["The cell has a colored border", "A Value Token Icon appears in the Formula Bar", "The font automatically changes to bold", "It cannot be told apart from plain text"], "correct": 1, "explain": "The Value Token Icon in the Formula Bar is the visual marker that a cell holds a structured, linked data object."}, {"q": "What is the correct syntax to pull the 'Price' field out of a Stocks Rich Data Type in cell A2?", "options": ["=GET(A2,\"Price\")", "=A2.Price", "=FIELD(A2!Price)", "=A2->Price"], "correct": 1, "explain": "Rich Data Types use dot notation, e.g. =A2.Price, to reference a specific sub-field."}]}, {"day": 3, "title": "Basic Formulas (SUM, AVERAGE, COUNT)", "summary": "SUM, AVERAGE, and COUNT remain the three most-used aggregation formulas in any analyst's toolkit, but the 2026 workflow layers in the Copilot Formula Generation Box, which lets you describe what you want in plain language and have Excel draft the formula for you. Understanding the underlying syntax is still essential — Copilot accelerates writing formulas, it doesn't replace knowing when SUM, COUNTA, or AVERAGEIF is the right tool.", "syntax": "=SUM(B2:B50)\n=AVERAGE(B2:B50)\n=COUNT(B2:B50)        (numeric cells only)\n=COUNTA(B2:B50)       (non-blank cells)\nCopilot box: \"total sales for the North region\" → auto-generates =SUMIF(...)", "scenario": "You're closing the monthly management accounts and need the total, average, and transaction count for 500 rows of sales data across five regions. Rather than writing SUMIF by hand for a first pass, you type your requirement into the Copilot Formula Generation Box, then review and adjust the generated formula before it goes into the report — combining speed with an analyst's judgment.", "quiz": [{"q": "Which function counts only cells containing numeric values?", "options": ["COUNTA", "COUNT", "COUNTIF", "SUM"], "correct": 1, "explain": "COUNT counts numeric cells only; COUNTA counts any non-blank cell regardless of type."}, {"q": "What is the primary risk of relying entirely on Copilot-generated formulas without review?", "options": ["Copilot formulas run slower", "The generated logic may not match your exact business rule and needs verification", "Copilot cannot generate SUM formulas", "Formulas generated by Copilot cannot be edited afterward"], "correct": 1, "explain": "AI-generated formulas should always be checked against the actual business requirement before being trusted in a report."}]}, {"day": 4, "title": "Cell References (Relative, Absolute, Mixed)", "summary": "Relative references shift when copied, absolute references (locked with $) stay fixed, and mixed references lock only the row or only the column. This concept is the backbone of scalable spreadsheet models — get it wrong and a formula copied across 500 rows silently references the wrong cell. The 2026 Faster Workbooks Core Update also means background recalculation across multiple open files is now dramatically faster, so building reference-heavy models is less painful even on large files.", "syntax": "=B2*$C$1        (absolute — C1 stays fixed when copied)\n=$B2*C1         (mixed — column B locked, row floats)\n=B$2*C1         (mixed — row 2 locked, column floats)\nF4 key           → cycles through reference types", "scenario": "You're building a pricing model where every product row needs to multiply its cost by a single VAT rate stored in cell C1. Using a relative reference here would break as soon as you copy the formula down 200 rows — the VAT cell reference would shift and eventually point at blank cells. Locking it as $C$1 keeps every row pointing at the correct rate.", "quiz": [{"q": "In the formula =B2*$C$1, what happens to the reference when copied down to row 3?", "options": ["Both B2 and C1 shift to B3 and C2", "B2 becomes B3, but $C$1 stays fixed", "The formula becomes invalid", "C1 becomes C2, but B2 stays fixed"], "correct": 1, "explain": "The $ symbols lock C1 absolutely, while the unlocked B2 reference shifts relatively as it's copied."}, {"q": "Which key cycles a cell reference through relative, absolute, and mixed states while editing a formula?", "options": ["F2", "F4", "F9", "Ctrl+`"], "correct": 1, "explain": "Pressing F4 while a reference is selected in the formula bar cycles it through $A$1, A$1, $A1, and A1."}]}, {"day": 5, "title": "Logical Functions (IF, AND, OR)", "summary": "IF, AND, and OR let you encode business rules directly into a worksheet, and nesting them allows for multi-condition decision logic. The 2026 workflow adds the COPILOT() function (Beta), which can be called from inside a formula to run an AI classification or judgment task on a cell's contents — effectively giving you a lightweight AI column without leaving the grid.", "syntax": "=IF(B2>100000,\"High Value\",\"Standard\")\n=IF(AND(B2>50000,C2=\"Active\"),\"Priority\",\"Normal\")\n=COPILOT(\"Categorize this review as Positive, Negative or Neutral\", A2)", "scenario": "Your collections team needs to flag overdue invoices as 'Critical' only when the amount exceeds ৳500,000 AND the invoice is more than 60 days overdue. A nested IF(AND(...)) formula encodes that exact business rule so the flag updates automatically as new invoices are added, instead of someone manually reviewing every row.", "quiz": [{"q": "What does =IF(AND(B2>50000,C2=\"Active\"),\"Priority\",\"Normal\") return if B2 is 60000 and C2 is \"Inactive\"?", "options": ["\"Priority\"", "\"Normal\"", "TRUE", "#VALUE!"], "correct": 1, "explain": "AND requires both conditions to be true; since C2 isn't \"Active\", the overall AND is FALSE, so IF returns \"Normal\"."}, {"q": "What is the primary purpose of the new COPILOT() worksheet function?", "options": ["To automatically sort a range", "To call an AI task, such as classification, directly inside a formula", "To lock a workbook with a password", "To convert numbers to text"], "correct": 1, "explain": "COPILOT() embeds an AI-driven judgment call, like categorizing free text, directly into a cell formula."}]}, {"day": 6, "title": "Lookup Functions (XLOOKUP, VLOOKUP)", "summary": "XLOOKUP is now the standard replacement for VLOOKUP: it can look left as well as right, doesn't break when columns are inserted, and doesn't require the lookup range to be sorted. Understanding VLOOKUP's limitations (right-only lookup, fragile column-index numbers) makes it clear why every modern model should default to XLOOKUP.", "syntax": "=XLOOKUP(A2, ProductTable[SKU], ProductTable[Price])\n=XLOOKUP(A2, SKU_Range, Price_Range, \"Not Found\")\nVLOOKUP (legacy): =VLOOKUP(A2, B:D, 3, FALSE)", "scenario": "A customer service rep needs to look up a customer's original order date given only their return-authorization number, but the return number is stored two columns to the right of the order date column. VLOOKUP physically cannot look leftward — XLOOKUP handles it in one formula with no helper columns required.", "quiz": [{"q": "What is a key advantage of XLOOKUP over VLOOKUP?", "options": ["XLOOKUP can look to the left of the lookup column", "XLOOKUP requires the data to be sorted", "XLOOKUP only works within the same sheet", "XLOOKUP cannot return a default value for missing matches"], "correct": 0, "explain": "Unlike VLOOKUP, XLOOKUP isn't restricted to searching rightward — it can retrieve values from any column relative to the lookup column."}, {"q": "In XLOOKUP, what does the optional fourth argument (e.g., \"Not Found\") do?", "options": ["Sets the default sort order", "Specifies the text returned when no match is found", "Limits the number of results returned", "Defines the column width"], "correct": 1, "explain": "The fourth argument is the if_not_found parameter, avoiding #N/A errors by returning custom text instead."}]}, {"day": 7, "title": "Index & Match", "summary": "INDEX and MATCH combined remain the most flexible two-dimensional lookup technique in Excel, especially when you need to look up a value based on both a row and a column criterion simultaneously — something XLOOKUP alone handles less elegantly in a true matrix. MATCH finds the position of a value; INDEX returns the value at that position, and nesting MATCH inside MATCH for both row and column arguments unlocks true 2D lookups.", "syntax": "=INDEX(DataRange, MATCH(RowValue,RowHeaders,0), MATCH(ColValue,ColHeaders,0))\n=INDEX(B2:B100, MATCH(A2, C2:C100, 0))", "scenario": "You have a pricing matrix where rows are product categories and columns are regions. To find the exact price for 'Electronics' in 'Chattogram', a single XLOOKUP can't search two axes at once — but INDEX/MATCH with a nested row-and-column MATCH pulls the exact intersection cell in one formula.", "quiz": [{"q": "In INDEX/MATCH, what does the MATCH function actually return?", "options": ["The value found in the range", "The position (row or column number) of the matched value", "A TRUE/FALSE result", "A formatted string"], "correct": 1, "explain": "MATCH returns a numeric position, which INDEX then uses to retrieve the actual value at that position."}, {"q": "Why is nested INDEX/MATCH still useful even though XLOOKUP exists?", "options": ["It's faster to type", "It can look up a value based on two intersecting criteria (row and column) in a true matrix", "XLOOKUP cannot be used with tables", "INDEX/MATCH doesn't require a range reference"], "correct": 1, "explain": "Two-dimensional matrix lookups (row AND column criteria) are INDEX/MATCH's classic strength."}]}, {"day": 8, "title": "Text Functions (LEFT, RIGHT, MID, LEN + Modern Functions)", "summary": "Classic text functions like LEFT, RIGHT, MID, and LEN extract fixed-position substrings, but the 2026 toolkit adds 14 modern text functions — TEXTBEFORE, TEXTAFTER, and TEXTSPLIT chief among them — that extract text based on a delimiter rather than a fixed character count. The most powerful addition is native REGEX support (REGEXEXTRACT, REGEXTEST, REGEXREPLACE), which lets you pull out any pattern, like an invoice number embedded in a free-text string, without complex nested formulas.", "syntax": "=LEFT(A2,3)\n=TEXTBEFORE(A2,\"@\")            (everything before @)\n=TEXTAFTER(A2,\"-\",2)           (text after the 2nd hyphen)\n=TEXTSPLIT(A2,\", \")            (spills into multiple cells)\n=REGEXEXTRACT(A2,\"\\d{4,}\")     (extract a 4+ digit number)", "scenario": "Your shipment notes column contains messy free text like 'INV-2026-04521 shipped via DHL on 12/07'. Instead of nesting five MID/FIND formulas to isolate the invoice number, one REGEXEXTRACT(A2,\"INV-\\d{4}-\\d+\") formula pulls it out cleanly regardless of where it sits in the string.", "quiz": [{"q": "What does TEXTAFTER(A2,\"-\",2) return?", "options": ["The text before the first hyphen", "The text after the second hyphen in the string", "The second character after any hyphen", "An error, since TEXTAFTER only accepts two arguments"], "correct": 1, "explain": "The optional instance number argument (2) tells TEXTAFTER to split on the second occurrence of the delimiter."}, {"q": "What is the main advantage of REGEXEXTRACT over nested LEFT/MID/FIND formulas?", "options": ["It only works on numbers", "It can extract text matching a flexible pattern regardless of position or exact formatting", "It automatically removes duplicates", "It converts text to uppercase"], "correct": 1, "explain": "Regex pattern matching handles variable-position, variable-length text far more robustly than fixed-position substring functions."}]}, {"day": 9, "title": "Date & Time Functions", "summary": "Date and time functions (TODAY, DATEDIF, EDATE, NETWORKDAYS) are essential for aging reports, deadline tracking, and scheduling. The 2026 addition of Real-Time Automatic Translations extends into date handling, automatically localizing date formats and timezone displays when a workbook is shared across regions — useful for multinational reporting where a date written 03/04/2026 means different things in different countries.", "syntax": "=TODAY()\n=DATEDIF(A2,TODAY(),\"d\")        (days elapsed)\n=NETWORKDAYS(A2,B2)             (working days between dates, excl. weekends)\n=EDATE(A2,3)                    (date 3 months after A2)", "scenario": "Your regional office in Dhaka and your parent company's office in London both edit the same shared workbook. Historically, a date like 03/04/2026 was ambiguous (day-month vs month-day). With automatic date localization enabled, each user sees dates rendered correctly in their own regional format without the underlying serial date value changing.", "quiz": [{"q": "What does NETWORKDAYS(A2,B2) calculate?", "options": ["Total calendar days between two dates, including weekends", "Working days between two dates, excluding weekends by default", "The number of network connections in a workbook", "The difference in months between two dates"], "correct": 1, "explain": "NETWORKDAYS specifically excludes Saturdays and Sundays (and optional holidays) from the day count."}, {"q": "Why can shared multinational date fields be risky without localization handling?", "options": ["Excel cannot store dates before 1990", "A date like 03/04/2026 can be misread as March 4 or April 3 depending on regional format", "Dates cannot be used in formulas", "NETWORKDAYS doesn't work internationally"], "correct": 1, "explain": "Day-first vs month-first format conventions differ by region, creating ambiguity unless localization is handled explicitly."}]}, {"day": 10, "title": "Conditional Formatting", "summary": "Conditional formatting turns raw numbers into visual signals — color scales, data bars, and icon sets that let a reader spot outliers at a glance. The 2026 Accessibility Assistant is a meaningful addition: it automatically checks whether your chosen color combinations meet contrast standards, flagging formatting choices (like light yellow text on white) that would be unreadable for users with visual impairments.", "syntax": "Home → Conditional Formatting → Color Scales\n=B2>AVERAGE($B$2:$B$100)     (custom formula rule, highlights above-average rows)\nReview tab → Accessibility Assistant → Check Contrast", "scenario": "You've built a KPI dashboard using a red-to-green color scale to show branch performance. Before sending it to leadership, the Accessibility Assistant flags that your 'red' and 'green' shades have insufficient contrast for colorblind viewers, and suggests an accessible alternative palette — preventing a dashboard that some viewers literally cannot interpret.", "quiz": [{"q": "What does the 2026 Accessibility Assistant check for in conditional formatting?", "options": ["Formula errors", "Whether chosen colors provide sufficient contrast for readability", "Whether cells are merged", "Print margins"], "correct": 1, "explain": "It specifically evaluates color contrast to ensure formatting remains readable and accessible."}, {"q": "Which conditional formatting rule type would highlight rows above the average of a range?", "options": ["Icon Sets only", "A custom formula rule using AVERAGE()", "Data Bars only", "Top 10 Items only, with no formula option"], "correct": 1, "explain": "A custom formula rule like =B2>AVERAGE($B$2:$B$100) gives full control to build dynamic, comparison-based highlighting."}]}, {"day": 11, "title": "Data Validation", "summary": "Data Validation restricts what can be typed into a cell — dropdown lists, number ranges, date ranges — reducing data entry errors at the source rather than cleaning them up afterward. The 2026 update makes searchable combo boxes the default behavior for dropdown lists, meaning users typing into a long list (like a 500-item customer list) can filter it by typing, instead of scrolling through an unsearchable dropdown.", "syntax": "Data tab → Data Validation → List → Source: =CustomerList\nData Validation → Whole Number → between 1 and 100\nData Validation → Date → after TODAY()", "scenario": "Your sales entry template has a customer dropdown with over 800 names. Previously, reps scrolled endlessly to find the right customer. With 2026's searchable combo box behavior, a rep types 'Rah' and the list filters instantly to matching customers like 'Rahman Textiles', cutting entry time and reducing wrong-customer selection errors.", "quiz": [{"q": "What is the main problem the 2026 searchable combo box dropdown solves?", "options": ["Slow formula recalculation", "Difficulty finding an item in a very long dropdown list by scrolling", "Incorrect number formatting", "Broken cell references"], "correct": 1, "explain": "Searchable combo boxes let users type to filter, which is essential once a dropdown list grows beyond a handful of items."}, {"q": "What is the primary benefit of applying Data Validation, compared to cleaning data after entry?", "options": ["It prevents invalid data from ever being entered", "It automatically formats currency", "It removes the need for formulas", "It compresses the file size"], "correct": 0, "explain": "Validation is a prevention control at the point of entry, rather than a correction step applied afterward."}]}, {"day": 12, "title": "Remove Duplicates & Data Cleaning", "summary": "Removing duplicates and cleaning inconsistent text (like 'New York' vs 'new york' vs ' NEW YORK ') used to require manual TRIM/PROPER/UPPER formulas. The 2026 Intelligent Data Cleaning feature ('Clean Data') automates this: it detects near-duplicate inconsistencies caused by casing, spacing, or minor typos, and standardizes them in one click, dramatically speeding up the classic 80% of an analyst's time spent on data cleaning.", "syntax": "Data tab → Data Tools → Remove Duplicates\nData tab → Clean Data (2026, Intelligent Data Cleaning)\n=TRIM(PROPER(A2))          (legacy manual cleaning approach)", "scenario": "You've imported a customer list from three different regional offices, and 'Dhaka', 'dhaka', and ' DHAKA ' all appear as separate values in a City column — inflating your unique-city count and breaking any GROUP BY-style summary. The Clean Data feature detects these as the same underlying value and standardizes them automatically, instead of you writing manual TRIM/PROPER formulas across every text column.", "quiz": [{"q": "What specific problem does the 2026 'Clean Data' (Intelligent Data Cleaning) feature target?", "options": ["Removing blank rows only", "Detecting and standardizing inconsistencies from casing, spacing, and minor typos", "Compressing large files", "Converting formulas to values"], "correct": 1, "explain": "It intelligently detects that variants like 'New York' and 'new york' represent the same value and normalizes them."}, {"q": "Before this feature existed, which two functions were commonly combined to manually clean inconsistent casing and spacing?", "options": ["SUM and COUNT", "TRIM and PROPER", "IF and VLOOKUP", "INDEX and MATCH"], "correct": 1, "explain": "TRIM removes extra spaces and PROPER standardizes casing — the classic manual data-cleaning combination."}]}, {"day": 13, "title": "Flash Fill & Text to Columns", "summary": "Flash Fill detects a pattern from an example you type and auto-completes the rest of a column, while Text to Columns splits a single column into multiple based on a delimiter. For genuinely complex or inconsistent patterns that Flash Fill can't reliably detect, the 2026 workflow lets you hand the task to Copilot, describing the split in plain language instead of manually pattern-matching.", "syntax": "Data tab → Flash Fill (Ctrl+E)\nData tab → Text to Columns → Delimited → Comma\nExample: \"Rahman, Karim\" → type \"Karim\" in next column, Ctrl+E fills the rest", "scenario": "You have a column of full names like 'Karim, Abdul' and need first and last names separated. You type the first correct example manually, then trigger Flash Fill with Ctrl+E, and Excel infers the pattern and completes the remaining 400 rows instantly — far faster than writing a nested TEXTBEFORE/TEXTAFTER formula for a one-off cleanup task.", "quiz": [{"q": "What is the keyboard shortcut to trigger Flash Fill after typing an example?", "options": ["Ctrl+D", "Ctrl+E", "Ctrl+F", "Ctrl+Shift+L"], "correct": 1, "explain": "Ctrl+E triggers Flash Fill, which detects the pattern from your typed example and fills the rest of the column."}, {"q": "When is Text to Columns generally preferred over Flash Fill?", "options": ["When splitting text based on a clear, consistent delimiter like a comma across the whole column", "When the pattern changes on every single row", "When you need to sum numbers", "When formatting dates only"], "correct": 0, "explain": "Text to Columns works best with a consistent delimiter; Flash Fill is better for inferred, example-based patterns."}]}, {"day": 14, "title": "Sort & Filter", "summary": "Sort and Filter are foundational for exploring and presenting data, but a common pain point in shared workbooks is one person's sort or filter disrupting the view for everyone else. Personalized View Sharing solves this: each user can sort or filter the same shared file according to their own needs without affecting what a co-worker sees, since the underlying data order remains independent per session.", "syntax": "Data tab → Sort → Sort by Column, then by (multi-level sort)\nData tab → Filter (Ctrl+Shift+L)\nView tab → Personalized View (2026)", "scenario": "You and a colleague both work from the same shared sales workbook. You need it sorted by region; they need it filtered to just their branch. Previously, whoever touched the sort/filter last would silently break the other's view. With Personalized View Sharing enabled, you each interact with your own view of the identical dataset simultaneously.", "quiz": [{"q": "What problem does Personalized View Sharing solve in a shared workbook?", "options": ["It speeds up formula calculation", "One user's sort/filter settings no longer overwrite another user's view of the same file", "It automatically removes duplicate rows", "It encrypts the workbook"], "correct": 1, "explain": "Personalized views let each collaborator sort/filter independently without disturbing others working in the same file."}, {"q": "What is the keyboard shortcut to toggle Filter arrows on a data range?", "options": ["Ctrl+Shift+L", "Ctrl+F", "Ctrl+Shift+F", "Alt+D"], "correct": 0, "explain": "Ctrl+Shift+L toggles AutoFilter dropdown arrows on the selected header row."}]}, {"day": 15, "title": "Advanced Filters & Dynamic Arrays", "summary": "FILTER and UNIQUE are the two functions that define modern spreadsheet analysis: FILTER returns a subset of rows matching a condition and UNIQUE lists distinct values, and both are Dynamic Array functions — meaning they automatically 'spill' results into neighboring cells and re-calculate the moment the source table changes, with no need to drag formulas down manually.", "syntax": "=FILTER(A2:D100, C2:C100=\"Dhaka\")\n=UNIQUE(A2:A100)\n=SORT(UNIQUE(A2:A100))\n=FILTER(A2:D100,(C2:C100=\"Dhaka\")*(D2:D100>1000))    (multiple conditions)", "scenario": "Your sales table grows every week as new transactions are appended. A traditional formula copied down a fixed number of rows would eventually miss new data or leave errors in empty trailing rows. A single =FILTER(SalesTable, RegionCol=\"Dhaka\") formula automatically expands or contracts its spill range as rows are added or removed — a live, self-maintaining report.", "quiz": [{"q": "What does it mean that FILTER and UNIQUE are 'Dynamic Array' functions?", "options": ["They only work with numbers", "They automatically spill results into multiple cells and auto-update as source data changes", "They require manual recalculation with F9", "They can only return a single value"], "correct": 1, "explain": "Dynamic Arrays spill automatically across as many cells as needed and refresh live as the source range changes."}, {"q": "How would you combine FILTER with multiple AND conditions in one formula?", "options": ["FILTER cannot handle multiple conditions", "Multiply the condition arrays together, e.g., (Cond1)*(Cond2)", "Nest a separate FILTER for each condition", "Use OR() instead of AND logic"], "correct": 1, "explain": "Multiplying boolean condition arrays acts as an AND operator inside array-based formulas like FILTER."}]}, {"day": 16, "title": "Pivot Tables Basics", "summary": "Pivot Tables summarize large datasets by dragging fields into Rows, Columns, Values, and Filters without writing any formulas. A recurring frustration was #SPILL errors appearing when dynamic array results overlapped existing data; the 2026 update brings smarter error handling specifically for Pivot Tables interacting with spilled ranges, highlighting the obstructing cells directly instead of a generic error.", "syntax": "Insert tab → PivotTable → choose source range/table\nDrag 'Region' to Rows, 'Sales' to Values (defaults to SUM)\nRight-click Values → Summarize Values By → Average", "scenario": "You have three years of raw transaction data and need a quick summary of total sales by region and by product category, broken out by quarter. Rather than writing a dozen SUMIFS formulas, you build a single Pivot Table, dragging Region and Category into Rows, Quarter into Columns, and Sales into Values — producing a cross-tab summary in seconds.", "quiz": [{"q": "In a Pivot Table, what does dragging a numeric field into the 'Values' area do by default?", "options": ["Counts the field", "Sums the field", "Averages the field", "Sorts the field alphabetically"], "correct": 1, "explain": "Numeric fields default to SUM when placed in the Values area (text fields default to COUNT)."}, {"q": "What does the 2026 update improve regarding #SPILL errors near Pivot Tables?", "options": ["It removes Pivot Tables entirely", "It highlights the specific obstructing cells instead of a generic error", "It disables dynamic arrays", "It converts spilled ranges into static values automatically"], "correct": 1, "explain": "The improved error handling pinpoints exactly which cells are blocking a spill, speeding up troubleshooting."}]}, {"day": 17, "title": "Pivot Tables Advanced & Modern Summarization", "summary": "Beyond dragging fields into a traditional Pivot Table, the new GROUPBY and PIVOTBY functions let you build a pivot-style summary directly with a formula — meaning the summary can live inline in a report, be referenced by other formulas, and update dynamically like any other array function, combined with PivotTable Auto Refresh (Beta) for traditional pivots.", "syntax": "=GROUPBY(City, Sales, SUM)\n=GROUPBY(City, Sales, SUM, 0, 0, Region)   (grouped with a filter/nested field)\n=PIVOTBY(Region, Quarter, Sales, SUM)      (two-way pivot as a formula)", "scenario": "Your monthly board pack needs a live-updating regional sales summary embedded directly next to a narrative commentary section — something a traditional Pivot Table can't do cleanly since it lives in its own object. Using =GROUPBY(City, Sales, SUM) puts a self-updating summary directly into a formula cell, blending seamlessly into the surrounding report layout.", "quiz": [{"q": "What is the key difference between GROUPBY/PIVOTBY and a traditional Pivot Table?", "options": ["They cannot summarize numeric data", "They are formulas that live inline in cells and update dynamically like any array formula", "They require VBA to function", "They only work with text data"], "correct": 1, "explain": "GROUPBY/PIVOTBY are formula-based, meaning they can sit inline in a report and recalculate automatically without refreshing a separate Pivot object."}, {"q": "What does PIVOTBY produce compared to GROUPBY?", "options": ["A one-dimensional list only", "A two-way, cross-tabulated summary similar to a classic pivot layout", "A chart, not a table", "A single aggregated value"], "correct": 1, "explain": "PIVOTBY summarizes across two dimensions (e.g., Region by Quarter), producing a genuine cross-tab, unlike GROUPBY's one-dimensional grouping."}]}, {"day": 18, "title": "Slicers & Timelines", "summary": "Slicers give users clickable buttons to filter Pivot Tables and Pivot Charts interactively, and Timelines do the same specifically for date fields. When a dashboard has multiple Pivot Tables that should all respond to the same slicer click, the 'Report Connections' setting is essential — without it, clicking a slicer only filters the one Pivot Table it was originally created from.", "syntax": "Insert tab → Slicer → choose field (e.g., Region)\nSlicer → Report Connections → check all related PivotTables\nInsert tab → Timeline → choose date field", "scenario": "Your executive dashboard has four separate Pivot Tables — Sales, Returns, Inventory, and Margin — all built from the same data model. When the CFO clicks 'Q3' on a single slicer, all four tables need to filter together. Setting up Report Connections links the slicer to all four Pivot Tables at once, so one click updates the entire dashboard.", "quiz": [{"q": "What does the 'Report Connections' setting on a Slicer control?", "options": ["Which color the slicer displays", "Which Pivot Tables the slicer filters simultaneously", "Whether the slicer is locked from editing", "The font size of the slicer buttons"], "correct": 1, "explain": "Report Connections determines which PivotTables respond when a single slicer selection is made."}, {"q": "A Timeline control is specifically designed to filter which type of field?", "options": ["Text fields", "Date fields", "Currency fields only", "Boolean fields"], "correct": 1, "explain": "Timelines are a specialized slicer variant built exclusively for filtering by date ranges."}]}, {"day": 19, "title": "Charts Basics & Dynamic Charts", "summary": "Charts turn tabular data into a visual story, and the 2026 update lets charts reference Dynamic Array spill ranges directly, meaning a chart built on a FILTER or UNIQUE result automatically grows or shrinks as the underlying spill range changes size — no more manually extending a fixed chart data range every time new data arrives.", "syntax": "Insert tab → Charts → Recommended Charts\nChart Data Range: =Sheet1!A1#          (the # references the entire spill range)\nRight-click chart → Select Data → set dynamic range", "scenario": "Your weekly sales report chart used to break every time a new week's row was added, because the chart's data range was fixed at A1:A52. Now, by pointing the chart at a UNIQUE/FILTER spill range using the # spill reference, the chart automatically extends itself as new weeks are appended — a truly self-maintaining visual.", "quiz": [{"q": "What does the # symbol represent when referencing a Dynamic Array in a chart's data range?", "options": ["A comment marker", "A reference to the entire spill range of a dynamic array formula", "An error indicator", "A named range shortcut only"], "correct": 1, "explain": "The # spill reference operator points to the full, currently-spilled output of a dynamic array formula."}, {"q": "Why is charting directly from a spill range useful for recurring weekly reports?", "options": ["It makes the chart print in color automatically", "The chart automatically resizes as the underlying data grows or shrinks, with no manual range updates", "It removes the need for a legend", "It converts the chart to a Pivot Chart"], "correct": 1, "explain": "This eliminates the manual, error-prone task of extending a fixed chart range every reporting period."}]}, {"day": 20, "title": "Advanced Charts & Image Integration", "summary": "Beyond standard chart types, the new IMAGE() function lets you pull an image directly from a web URL into a cell as a genuine cell value — meaning the image behaves like data. It stays attached to its row when the table is filtered or sorted, unlike a traditional floating picture object that stays fixed to the worksheet canvas regardless of row order.", "syntax": "=IMAGE(\"https://example.com/product123.jpg\", \"Product 123\")\n=IMAGE(A2, B2, 2)     (fit mode: 0=fit,1=fill,2=stretch)", "scenario": "Your product catalog worksheet has 300 rows, each needing a thumbnail. With traditional floating images, sorting the table by price would leave every picture in its original screen position, misaligned with its row. Using =IMAGE(url_cell) instead embeds the picture as true cell content, so sorting or filtering the table correctly carries each image along with its row.", "quiz": [{"q": "What is the key behavioral difference between an IMAGE() function result and a traditional inserted picture?", "options": ["IMAGE() results cannot be resized", "IMAGE() results behave as cell content and move correctly with sorting/filtering, unlike floating pictures", "Traditional pictures load faster", "IMAGE() only works with local files, not URLs"], "correct": 1, "explain": "Because IMAGE() output is a genuine cell value, it stays tied to its row, unlike a floating object anchored to a fixed sheet position."}, {"q": "What does the third, optional argument in =IMAGE(A2,B2,2) control?", "options": ["The image's file size", "The fit mode (e.g., fit, fill, or stretch) within the cell", "The number of images displayed", "The border color"], "correct": 1, "explain": "The fit-mode argument determines how the image scales to fit the cell dimensions."}]}, {"day": 21, "title": "Sparklines", "summary": "Sparklines are tiny in-cell charts that show a trend without taking up the space of a full chart object, making them ideal companions to KPI cards on a dashboard where you want to show 'what happened over time' next to 'what the number is right now' in a compact footprint.", "syntax": "Insert tab → Sparklines → Line (or Column, or Win/Loss)\nSparkline Tools → Style → choose highlight for high/low points", "scenario": "Your executive KPI dashboard shows this month's revenue as a large number in a card. Next to it, you add a Line Sparkline showing the last 12 months of revenue in a single cell — giving the reader instant trend context ('is this number climbing or falling?') without needing to click into a separate full-size chart.", "quiz": [{"q": "What is the main advantage of a Sparkline compared to a standard chart?", "options": ["Sparklines can show more data series at once", "Sparklines fit inside a single cell, providing a compact trend view alongside other data", "Sparklines automatically calculate averages", "Sparklines replace the need for Pivot Tables"], "correct": 1, "explain": "Their compact, in-cell nature makes them ideal for pairing with KPI numbers in dashboard layouts."}, {"q": "Which Sparkline type is best suited for showing a binary sequence of wins and losses over time?", "options": ["Line", "Column", "Win/Loss", "Pie"], "correct": 2, "explain": "Win/Loss Sparklines are purpose-built to show a simple positive/negative sequence rather than magnitude."}]}, {"day": 22, "title": "What-If Analysis (Scenario, Goal Seek)", "summary": "Goal Seek works backward from a desired result to find the input that produces it, and Scenario Manager lets you save and compare multiple sets of input assumptions side by side. The 2026 addition of Copilot Agent extends this into multi-step scenario running, where you can describe a chain of 'what-if' assumptions in natural language and have the agent execute the sequence of Goal Seek/Scenario steps for you.", "syntax": "Data tab → What-If Analysis → Goal Seek\n  Set cell: ProfitCell, To value: 0, By changing: PriceCell\nData tab → What-If Analysis → Scenario Manager → Add Scenario", "scenario": "Your finance model needs to know: what unit price would achieve exactly break-even profit given current fixed costs? Instead of manually guessing and re-entering prices, Goal Seek works backward from Profit = 0 to solve directly for the required price — a calculation that would otherwise require algebraic rearrangement of the whole model.", "quiz": [{"q": "What does Goal Seek do?", "options": ["Forecasts future values using regression", "Works backward from a target output value to find the required input value", "Automatically formats a range", "Removes duplicate scenarios"], "correct": 1, "explain": "Goal Seek is a single-variable backward solver: you specify the desired result, and it finds the input that achieves it."}, {"q": "What is the main advantage of Scenario Manager over Goal Seek?", "options": ["It can save and compare multiple complete sets of input assumptions", "It only works with one variable at a time, like Goal Seek", "It automatically emails results", "It replaces the need for formulas entirely"], "correct": 0, "explain": "Scenario Manager stores multiple named sets of inputs (e.g., Best Case, Worst Case) for side-by-side comparison, unlike Goal Seek's single backward-solve."}]}, {"day": 23, "title": "Data Analysis ToolPak & Built-in Python", "summary": "The single biggest shift in modern Excel is native Python integration: typing =PY() in the Formulas tab opens an in-cell Python editor where you can use Pandas, NumPy, and Matplotlib directly against your worksheet data, without leaving Excel or exporting to a separate script. The classic Data Analysis ToolPak (regression, t-tests, histograms) still exists, but Python now handles far more sophisticated statistical and machine-learning workloads natively.", "syntax": "=PY(pd.DataFrame(xl(\"A1:C100\", headers=True)).groupby(\"Region\")[\"Sales\"].sum())\n=PY(df.describe())\nFile → Options → Add-ins → Analysis ToolPak (legacy)", "scenario": "You need a statistically robust outlier-detection method (like a z-score threshold) across 10,000 rows of transaction data — something painful to build with nested Excel formulas. Typing =PY() and writing a short Pandas snippet using df[abs(df.value - df.value.mean()) > 3*df.value.std()] does it in three lines, using the exact same data already sitting in your worksheet.", "quiz": [{"q": "What does typing =PY() in a cell do in the 2026 version of Excel?", "options": ["Opens a Python code editor to run Pandas/NumPy/Matplotlib directly against worksheet data", "Prints the word 'Python' in the cell", "Converts the cell to a currency format", "Pastes a screenshot"], "correct": 0, "explain": "Native Python integration lets you write real Python code, referencing worksheet ranges via the xl() function, inside a formula cell."}, {"q": "What is the primary use case where Python in Excel outperforms native formulas?", "options": ["Simple SUM calculations", "Sophisticated statistical analysis and data science workflows using Pandas/NumPy", "Basic text formatting", "Changing cell colors"], "correct": 1, "explain": "Python's libraries handle complex statistical and data-science tasks far more concisely than nested native formulas."}]}, {"day": 24, "title": "Power Query - Get & Transform", "summary": "Power Query is Excel's ETL engine: it connects to a data source, lets you build a repeatable sequence of transformation steps, and refreshes the result with one click rather than repeating manual cleanup every time new data arrives. The 2026 Revamped Get Data Dialog adds an integrated search box across all connector types, so finding the right database, file, or web connector is a single search instead of navigating a long categorized menu.", "syntax": "Data tab → Get Data → (search box) → type \"SQL Server\"\nHome → Advanced Editor → view/edit M code steps directly", "scenario": "You need to connect to a SQL Server database, a SharePoint list, and a folder of CSV files, then combine them into one clean table. Previously this meant hunting through nested connector menus; the 2026 Get Data search box lets you type 'SQL' and 'SharePoint' directly to jump straight to the right connector, cutting setup time on a multi-source pipeline.", "quiz": [{"q": "What is the core purpose of Power Query in an analyst's workflow?", "options": ["To create Pivot Charts only", "To connect, transform, and repeatably clean data through a recorded sequence of steps", "To send emails automatically", "To replace Conditional Formatting"], "correct": 1, "explain": "Power Query's core value is a repeatable, auditable ETL (Extract-Transform-Load) pipeline, refreshable with one click."}, {"q": "What does the 2026 Revamped Get Data Dialog primarily improve?", "options": ["Formula calculation speed", "Discoverability of data connectors via an integrated search box", "Chart formatting options", "Print layout settings"], "correct": 1, "explain": "The search box lets users find the right connector instantly instead of browsing a long categorized list."}]}, {"day": 25, "title": "Power Query - Merge & Append", "summary": "Merge combines two queries side-by-side based on a matching key (like a SQL JOIN), while Append stacks two queries on top of each other (like a SQL UNION). The 2026 Copilot integration inside Power Query lets you describe a transformation in plain language — such as filtering sales over a threshold for a specific year — and have Copilot generate the corresponding M code steps automatically.", "syntax": "Home → Merge Queries → choose join type (Inner, Left Outer, etc.)\nHome → Append Queries → New Query\nCopilot prompt: \"Show me all sales over $10,000 for 2025\" → auto-generates Table.SelectRows(...)", "scenario": "You have separate monthly sales export files from January through December that need to become one combined yearly table (Append), and each transaction needs customer details merged in from a separate customer master file (Merge). Rather than manually writing M code for both operations, you describe the filter step to Copilot in plain English and it drafts the corresponding Table.SelectRows step for you to review.", "quiz": [{"q": "What is the key structural difference between Merge and Append in Power Query?", "options": ["Merge stacks rows; Append joins columns", "Merge joins queries side-by-side on a key (like a JOIN); Append stacks queries on top of each other (like a UNION)", "They are identical operations with different names", "Append only works with numeric data"], "correct": 1, "explain": "Merge = horizontal join based on a matching key; Append = vertical stacking of similarly-structured tables."}, {"q": "What does the Copilot integration inside Power Query allow you to do?", "options": ["Automatically delete all queries", "Describe a transformation in natural language and have M code generated automatically", "Convert queries into Pivot Tables only", "Bypass the need for a data source connection"], "correct": 1, "explain": "Natural-language prompts get translated into actual M code transformation steps, which you can still review and edit."}]}, {"day": 26, "title": "Power Pivot Basics", "summary": "Power Pivot extends Excel's data modeling capacity far beyond what a single worksheet can hold, using a compressed, memory-optimized columnar engine (the same engine underlying Power BI) to handle millions of rows efficiently. Building relationships between multiple tables in the Data Model, rather than flattening everything into one giant sheet, is the foundation for scalable DAX-based reporting.", "syntax": "Power Pivot tab → Manage → Add to Data Model\nDiagram View → drag to create relationship between Fact and Dimension tables\nRelationship: SalesTable[ProductID] → ProductTable[ProductID]", "scenario": "Your raw sales data has 3 million rows — far too many to comfortably work with as a single flat Excel sheet without severe slowdown. Loading it into the Power Pivot Data Model, and linking it via relationships to smaller Product and Customer dimension tables, keeps the file fast and lets you build DAX measures against the full dataset without ever flattening it into one sheet.", "quiz": [{"q": "What is the primary advantage of the Power Pivot Data Model over a standard worksheet for large datasets?", "options": ["It automatically translates languages", "It uses a memory-optimized columnar engine that handles millions of rows efficiently", "It removes the need for any relationships between tables", "It only works with text data"], "correct": 1, "explain": "The columnar, compressed engine is designed specifically to handle far larger datasets than a standard worksheet grid."}, {"q": "What is the purpose of building a 'relationship' between two tables in the Data Model?", "options": ["To merge them into a single physical table", "To link related tables (e.g., Fact and Dimension) via a common key so they can be queried together", "To apply conditional formatting across sheets", "To password-protect the tables"], "correct": 1, "explain": "Relationships let DAX measures and Pivot Tables pull correctly filtered data across multiple linked tables without physically merging them."}]}, {"day": 27, "title": "DAX Basics (SUM, COUNT, CALCULATE) & LAMBDA", "summary": "DAX (Data Analysis Expressions) powers measures inside the Data Model, with CALCULATE being the most important function — it changes the filter context under which an aggregation like SUM is evaluated. Separately, the new native LAMBDA() function lets you define entirely custom, reusable Excel functions without writing any VBA, and save them into the Name Manager for use across any workbook.", "syntax": "TotalSales := SUM(SalesTable[Amount])\nSalesLastYear := CALCULATE([TotalSales], SAMEPERIODLASTYEAR('Date'[Date]))\n=LAMBDA(x,y, x^2+y^2)(3,4)     (custom reusable function, no VBA)", "scenario": "Your board wants a 'Sales vs Same Period Last Year' comparison measure. A plain SUM formula has no concept of 'last year' — but wrapping it in CALCULATE with a SAMEPERIODLASTYEAR filter shifts the entire filter context back one year, producing exactly the comparison measure needed, recalculating automatically as new data and new time periods are added.", "quiz": [{"q": "What is the primary role of the CALCULATE function in DAX?", "options": ["It only sums numeric fields", "It changes the filter context under which another calculation is evaluated", "It sorts a table", "It merges two tables"], "correct": 1, "explain": "CALCULATE is DAX's core context-modifier — it lets you override or add filters before evaluating an expression like SUM."}, {"q": "What does the native LAMBDA() function let you do without writing VBA?", "options": ["Delete rows automatically", "Define and reuse entirely custom Excel functions", "Change the workbook's theme", "Import external data"], "correct": 1, "explain": "LAMBDA lets you build named, reusable formula-based functions natively, something previously only possible through VBA macros."}]}, {"day": 28, "title": "Dashboard in Excel", "summary": "Bringing together Pivot Tables, Slicers, Sparklines, and dynamic array charts into one cohesive sheet is the essence of a native Excel dashboard — no external BI tool required for many use cases. The new Agent Mode in Copilot can chain multiple dashboard-building steps automatically (create pivot, add slicer, insert chart, apply formatting) from a single natural-language instruction describing the desired end result.", "syntax": "View tab → Freeze Panes (lock header row while scrolling)\nAgent Mode prompt: \"Build a sales dashboard with regional slicer and monthly trend chart\"\nPage Layout → Themes → apply consistent dashboard color theme", "scenario": "Your manager asks for 'a one-page dashboard showing sales by region with a slicer and a trend line, ready by end of day.' Instead of manually building each Pivot Table, chart, and slicer step by step, you describe the end goal to Copilot's Agent Mode, which chains the multi-step build process, leaving you to focus on refining layout and verifying accuracy.", "quiz": [{"q": "What capability does the new Copilot 'Agent Mode' add for dashboard building?", "options": ["It can only format cell colors", "It chains multiple build steps (pivot, slicer, chart) automatically from one natural-language instruction", "It deletes unused worksheets", "It compresses the file for email"], "correct": 1, "explain": "Agent Mode performs a multi-step task sequence autonomously, rather than requiring each step to be manually triggered."}, {"q": "Why is Freeze Panes commonly used on dashboard sheets?", "options": ["It speeds up formula calculation", "It keeps header rows/columns visible while scrolling through a large dashboard", "It locks cell formatting permanently", "It hides sensitive data"], "correct": 1, "explain": "Freeze Panes keeps labels and headers in view as a user scrolls, which is important for readable, navigable dashboards."}]}, {"day": 29, "title": "Project - Sales Data Analysis", "summary": "This project day combines Python-in-Excel with dynamic array formulas to conduct an end-to-end analysis of a raw sales dataset: cleaning, aggregating, detecting trends, and producing charts, all within one workbook, blending the precision of Python's statistical libraries with the live, referenceable nature of native Excel formulas.", "syntax": "=PY(df.groupby(\"Month\")[\"Sales\"].sum().plot(kind=\"line\"))\n=SORT(FILTER(SalesTable, SalesTable[Amount]>AVERAGE(SalesTable[Amount])))\n=GROUPBY(Region, Sales, SUM)", "scenario": "You've been asked to identify which regions are trending upward versus declining over the past 12 months, and to flag any month with an anomalous spike. Using Python's Pandas for the trend/anomaly detection and native dynamic array formulas for the live-updating summary tables gives you both statistical rigor and a dashboard that updates the moment new monthly data lands.", "quiz": [{"q": "What is the benefit of combining Python-in-Excel with native dynamic array formulas in one project?", "options": ["It removes the need for any charts", "It blends Python's statistical power with the live, auto-updating nature of native Excel formulas", "It only works offline", "It replaces Power Query entirely"], "correct": 1, "explain": "Python handles complex statistical logic while dynamic arrays keep the surrounding report live and self-maintaining."}, {"q": "Which formula combination would return only above-average sales rows, sorted?", "options": ["=SUM(FILTER(...))", "=SORT(FILTER(SalesTable, SalesTable[Amount]>AVERAGE(SalesTable[Amount])))", "=COUNT(SalesTable)", "=IF(SalesTable>0,1,0)"], "correct": 1, "explain": "FILTER isolates rows meeting the above-average condition, and wrapping it in SORT orders the resulting spill range."}]}, {"day": 30, "title": "Project - Excel Dashboard Final", "summary": "The capstone project brings together every technique from the past 29 days — Dark Mode theming, PIVOTBY-based summaries, slicer auto-connections across multiple visuals, dynamic array-driven charts, and DAX measures — into a single, polished, client-ready dashboard. The goal is not just technical correctness but presentation: consistent color theming, clear KPI cards, and a layout a client can navigate without instruction.", "syntax": "=PIVOTBY(Region, Month, Sales, SUM)\nSlicer → Report Connections → link across all visuals\nPage Layout → Themes → apply Dark Mode-consistent theme", "scenario": "You're delivering the final dashboard to a client who will judge it in the first ten seconds. Every visual must share the same slicer connections so filtering feels instant and consistent, every KPI card must use the same color logic as the rest of the report, and the whole file should open directly into the dashboard view — no scrolling through raw data sheets required.", "quiz": [{"q": "What distinguishes the capstone project from earlier individual-topic days?", "options": ["It only tests one function in isolation", "It integrates multiple techniques (pivots, slicers, dynamic arrays, DAX) into one cohesive, presentation-ready deliverable", "It removes the need for formulas", "It focuses solely on VBA macros"], "correct": 1, "explain": "The capstone specifically requires synthesizing many prior skills into a single polished, real-world dashboard."}, {"q": "Why is consistent slicer Report Connections especially important in a final client dashboard?", "options": ["It reduces file size", "It ensures every visual on the dashboard filters together consistently when a client clicks one control", "It changes the font automatically", "It is required for the file to be saved"], "correct": 1, "explain": "A dashboard feels broken to a client if filtering one visual doesn't update the others — consistent connections are essential polish."}]}];
+
+let currentDayIndex = null;
+
+function getCompleted(dayNum) {
+  try { return localStorage.getItem(STORAGE_PREFIX + dayNum) === "true"; } catch(e) { return false; }
+}
+function setCompleted(dayNum, val) {
+  try { localStorage.setItem(STORAGE_PREFIX + dayNum, val ? "true" : "false"); } catch(e) {}
+}
+function getQuizStat() {
+  try {
+    const c = parseInt(localStorage.getItem(STORAGE_PREFIX + "quiz_correct") || "0");
+    const t = parseInt(localStorage.getItem(STORAGE_PREFIX + "quiz_total") || "0");
+    return {c,t};
+  } catch(e) { return {c:0,t:0}; }
+}
+function recordQuizAnswer(isCorrect) {
+  try {
+    const s = getQuizStat();
+    localStorage.setItem(STORAGE_PREFIX + "quiz_total", String(s.t + 1));
+    localStorage.setItem(STORAGE_PREFIX + "quiz_correct", String(s.c + (isCorrect?1:0)));
+  } catch(e) {}
+}
+
+function computeStreak() {
+  let streak = 0;
+  for (let i = 0; i < DAYS.length; i++) {
+    if (getCompleted(DAYS[i].day + DAY_OFFSET)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function renderProgress() {
+  const total = DAYS.length;
+  let done = 0;
+  DAYS.forEach(d => { if (getCompleted(d.day + DAY_OFFSET)) done++; });
+  const pct = Math.round((done/total)*100);
+  document.getElementById('progressCount').textContent = done;
+  document.getElementById('progressFill').style.width = pct + "%";
+  document.getElementById('statPct').textContent = pct + "%";
+  document.getElementById('statStreak').textContent = computeStreak();
+  const qs = getQuizStat();
+  document.getElementById('statQuiz').textContent = qs.t > 0 ? Math.round((qs.c/qs.t)*100) + "%" : "\u2014";
+}
+
+function renderGrid() {
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = "";
+  DAYS.forEach((d, idx) => {
+    const globalDay = d.day + DAY_OFFSET;
+    const done = getCompleted(globalDay);
+    const card = document.createElement('button');
+    card.className = "day-card rounded-xl p-3 sm:p-4 text-left" + (done ? " completed" : "");
+    card.setAttribute('aria-label', 'Day ' + globalDay + ': ' + d.title);
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-2">
+        <span class="cell-ref">DAY ${globalDay}</span>
+        ${done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="accent-text"><path d="M20 6L9 17l-5-5"/></svg>' : '<span class="w-4 h-4 rounded-full border border-white/15 inline-block"></span>'}
+      </div>
+      <p class="font-display font-semibold text-xs sm:text-sm leading-snug line-clamp-3">${d.title}</p>
+    `;
+    card.addEventListener('click', () => openLesson(idx));
+    grid.appendChild(card);
+  });
+}
+
+function openLesson(idx) {
+  currentDayIndex = idx;
+  const d = DAYS[idx];
+  const globalDay = d.day + DAY_OFFSET;
+  document.getElementById('dashboardView').classList.add('hidden');
+  document.getElementById('lessonView').classList.remove('hidden');
+  document.getElementById('lessonDayLabel').textContent = "DAY " + globalDay + " OF 90";
+  document.getElementById('lessonTitle').textContent = d.title;
+  document.getElementById('lessonSummary').textContent = d.summary;
+  document.getElementById('lessonSyntax').textContent = d.syntax;
+  document.getElementById('lessonScenario').textContent = d.scenario;
+  const cb = document.getElementById('completeCheckbox');
+  cb.checked = getCompleted(globalDay);
+  cb.onchange = () => { setCompleted(globalDay, cb.checked); renderProgress(); };
+  renderQuiz(d.quiz, globalDay);
+  document.getElementById('prevDayBtn').disabled = idx === 0;
+  document.getElementById('nextDayBtn').disabled = idx === DAYS.length - 1;
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+function renderQuiz(quiz, globalDay) {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = "";
+  quiz.forEach((q, qi) => {
+    const qBlock = document.createElement('div');
+    qBlock.className = "pb-5" + (qi < quiz.length - 1 ? " border-b border-white/5" : "");
+    const qTitle = document.createElement('p');
+    qTitle.className = "font-medium text-sm sm:text-base mb-3";
+    qTitle.textContent = (qi+1) + ". " + q.q;
+    qBlock.appendChild(qTitle);
+    const optsWrap = document.createElement('div');
+    optsWrap.className = "space-y-2";
+    const explainBox = document.createElement('div');
+    explainBox.className = "hidden mt-3 text-xs sm:text-sm text-slate-400 glass rounded-lg p-3";
+    q.options.forEach((opt, oi) => {
+      const optEl = document.createElement('div');
+      optEl.className = "quiz-option border border-white/10 rounded-lg p-3 sm:p-4 text-xs sm:text-sm";
+      optEl.textContent = opt;
+      optEl.addEventListener('click', () => {
+        if (optsWrap.dataset.answered === "true") return;
+        optsWrap.dataset.answered = "true";
+        optsWrap.querySelectorAll('.quiz-option').forEach(el => el.classList.add('locked'));
+        const isCorrect = oi === q.correct;
+        optEl.classList.add(isCorrect ? 'quiz-correct' : 'quiz-incorrect');
+        if (!isCorrect) {
+          optsWrap.children[q.correct].classList.add('quiz-correct');
+        }
+        explainBox.classList.remove('hidden');
+        explainBox.textContent = q.explain;
+        recordQuizAnswer(isCorrect);
+        renderProgress();
+      });
+      optsWrap.appendChild(optEl);
+    });
+    qBlock.appendChild(optsWrap);
+    qBlock.appendChild(explainBox);
+    container.appendChild(qBlock);
+  });
+}
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  document.getElementById('lessonView').classList.add('hidden');
+  document.getElementById('dashboardView').classList.remove('hidden');
+  renderGrid();
+  renderProgress();
+  window.scrollTo({top:0, behavior:'instant'});
+});
+
+document.getElementById('prevDayBtn').addEventListener('click', () => {
+  if (currentDayIndex > 0) openLesson(currentDayIndex - 1);
+});
+document.getElementById('nextDayBtn').addEventListener('click', () => {
+  if (currentDayIndex < DAYS.length - 1) openLesson(currentDayIndex + 1);
+});
+
+document.getElementById('navBtn').addEventListener('click', () => {
+  document.getElementById('mobileNav').classList.toggle('hidden');
+});
+
+renderGrid();
+renderProgress();
+</script>
+</body>
+</html>
